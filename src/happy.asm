@@ -15,7 +15,6 @@
 
 .proc nmi_handler
   JSR readjoy
-  JSR moving_sprite
 
   ; Refresh OAM
   LDA #$00
@@ -23,44 +22,6 @@
   LDA #$02
   STA OAMDMA
   RTI
-.endproc
-
-.proc moving_sprite
-  LDX #$00
-move_main_sprite:
-  LDA #%00001000
-  AND buttons
-  BNE move_up
-  LDA #%00000100
-  AND buttons
-  BNE move_down
-  JMP move_horiz
-move_up:
-  DEC $0200,X
-  JMP move_horiz
-move_down:
-  INC $0200,X
-move_horiz:
-  LDA #%00000010
-  AND buttons
-  BNE move_left
-  LDA #%00000001
-  AND buttons
-  BNE move_right
-  JMP move_else
-move_left:
-  DEC $0203,X
-  JMP move_else
-move_right:
-  INC $0203,X
-move_else:
-  INX
-  INX
-  INX
-  INX
-  CPX #$10
-  BNE move_main_sprite
-  RTS
 .endproc
 
 .export main
