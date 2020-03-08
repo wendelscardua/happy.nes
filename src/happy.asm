@@ -120,36 +120,37 @@ palettes:
 .byte $0F, $09, $19, $29
 
 sprites:
-;;    Y    TILE FLAG       X
-.byte $F0, $00, 1, $F0
-.byte $F0, $01, 1, $F8
-.byte $F8, $10, 1, $F0
-.byte $F8, $11, 1, $F8
-
-.byte $F0, $02, 1, $F0
-.byte $F0, $03, 1, $F8
-.byte $F8, $12, 1, $F0
-.byte $F8, $13, 1, $F8
-
-.byte $F0, $04, 1, $F0
-.byte $F0, $05, 1, $F8
-.byte $F8, $14, 1, $F0
-.byte $F8, $15, 1, $F8
-
-.byte $F0, $06, 1, $F0
-.byte $F0, $07, 1, $F8
-.byte $F8, $16, 1, $F0
-.byte $F8, $17, 1, $F8
-
-.byte $F0, $08, 1, $F0
-.byte $F0, $09, 1, $F8
-.byte $F8, $18, 1, $F0
-.byte $F8, $19, 1, $F8
-
-.byte $F0, $0a, 1, $F0
-.byte $F0, $0b, 1, $F8
-.byte $F8, $1a, 1, $F0
-.byte $F8, $1b, 1, $F8
+;    Y    TILE FLAG       X
+; DIE-1
+.byte $F0, $00, 3, $F0
+.byte $F0, $01, 3, $F8
+.byte $F8, $10, 3, $F0
+.byte $F8, $11, 3, $F8
+; DIE-2
+.byte $F0, $02, 3, $F0
+.byte $F0, $03, 3, $F8
+.byte $F8, $12, 3, $F0
+.byte $F8, $13, 3, $F8
+; DIE-3
+.byte $F0, $04, 3, $F0
+.byte $F0, $05, 3, $F8
+.byte $F8, $14, 3, $F0
+.byte $F8, $15, 3, $F8
+; DIE-4
+.byte $F0, $06, 3, $F0
+.byte $F0, $07, 3, $F8
+.byte $F8, $16, 3, $F0
+.byte $F8, $17, 3, $F8
+; DIE-5
+.byte $F0, $08, 3, $F0
+.byte $F0, $09, 3, $F8
+.byte $F8, $18, 3, $F0
+.byte $F8, $19, 3, $F8
+; DIE-6
+.byte $F0, $0a, 3, $F0
+.byte $F0, $0b, 3, $F8
+.byte $F8, $1a, 3, $F0
+.byte $F8, $1b, 3, $F8
 
 board_nametable:
 .incbin "../assets/board.nam"
