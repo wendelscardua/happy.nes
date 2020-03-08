@@ -3,6 +3,7 @@
 
 .zeropage
 .import buttons
+addr_ptr: .res 2
 
 .segment "CODE"
 
@@ -38,6 +39,36 @@ load_palettes:
   INX
   CPX #$20
   BNE load_palettes
+
+  ; write board background data
+load_board_background:
+  LDA PPUSTATUS
+  LDA #$20
+  STX PPUADDR
+  LDA #$00
+  STX PPUADDR
+
+  lda #<board_nametable
+  sta addr_ptr
+  lda #>board_nametable
+  sta addr_ptr+1
+
+  ; Copy one page of data ($100 bytes)
+copy_board_bg_page:
+  ldy #0
+copy_board_bg_loop:
+  lda (addr_ptr), y
+  sta PPUDATA
+  iny
+  bne copy_board_bg_loop
+
+  ; Move on to the next page, or leave if finished
+  lda addr_ptr+1
+  clc
+  adc #1
+  sta addr_ptr+1
+  cmp #(>board_nametable + 4)
+  bne copy_board_bg_page
 
   ; write sprite data
   LDX #$00
@@ -83,6 +114,10 @@ sprites:
 .byte $70, $06, %00000000, $88
 .byte $78, $07, %00000000, $80
 .byte $78, $08, %00000000, $88
+
+
+board_nametable:
+.incbin "../assets/board.nam"
 
 .segment "CHR"
 .incbin "../assets/graphics.chr"
