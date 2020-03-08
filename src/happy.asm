@@ -1,6 +1,8 @@
 .include "constants.inc"
 .include "header.inc"
 
+DICE_ADDR = $0200
+
 .zeropage
 .import buttons
 addr_ptr: .res 2
@@ -70,13 +72,22 @@ copy_board_bg_loop:
   cmp #(>board_nametable + 4)
   bne copy_board_bg_page
 
+  ; clean sprite data
+  LDX #$00
+  LDA #$FF
+clean_sprites:
+  STA $0200,X
+  INX
+  CPX #$00
+  BNE clean_sprites
+
   ; write sprite data
   LDX #$00
 load_sprites:
   LDA sprites,X
   STA $0200,X
   INX
-  CPX #$10        ; size of sprites list
+  CPX #$60        ; size of sprites list
   BNE load_sprites
 
 vblankwait:       ; wait for another vblank before continuing
@@ -110,11 +121,35 @@ palettes:
 
 sprites:
 ;;    Y    TILE FLAG       X
-.byte $70, $05, %00000000, $80
-.byte $70, $06, %00000000, $88
-.byte $78, $07, %00000000, $80
-.byte $78, $08, %00000000, $88
+.byte $F0, $00, 1, $F0
+.byte $F0, $01, 1, $F8
+.byte $F8, $10, 1, $F0
+.byte $F8, $11, 1, $F8
 
+.byte $F0, $02, 1, $F0
+.byte $F0, $03, 1, $F8
+.byte $F8, $12, 1, $F0
+.byte $F8, $13, 1, $F8
+
+.byte $F0, $04, 1, $F0
+.byte $F0, $05, 1, $F8
+.byte $F8, $14, 1, $F0
+.byte $F8, $15, 1, $F8
+
+.byte $F0, $06, 1, $F0
+.byte $F0, $07, 1, $F8
+.byte $F8, $16, 1, $F0
+.byte $F8, $17, 1, $F8
+
+.byte $F0, $08, 1, $F0
+.byte $F0, $09, 1, $F8
+.byte $F8, $18, 1, $F0
+.byte $F8, $19, 1, $F8
+
+.byte $F0, $0a, 1, $F0
+.byte $F0, $0b, 1, $F8
+.byte $F8, $1a, 1, $F0
+.byte $F8, $1b, 1, $F8
 
 board_nametable:
 .incbin "../assets/board.nam"
