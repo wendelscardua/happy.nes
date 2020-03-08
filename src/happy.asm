@@ -124,4 +124,4 @@ sprites:
 .byte $78, $08, %00000000, $88
 
 .segment "CHR"
-.incbin "graphics.chr"
+.incbin "../assets/graphics.chr"
