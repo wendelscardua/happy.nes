@@ -2,6 +2,8 @@
 .include "header.inc"
 
 DICE_ADDR = $0200
+PIPS_ADDR = $0260
+CURSOR_ADDR = $0280
 
 .zeropage
 .import buttons
@@ -87,7 +89,7 @@ load_sprites:
   LDA sprites,X
   STA $0200,X
   INX
-  CPX #$60        ; size of sprites list
+  CPX #$84        ; size of sprites list
   BNE load_sprites
 
 vblankwait:       ; wait for another vblank before continuing
@@ -114,7 +116,7 @@ palettes:
 .byte $0F, $01, $21, $31
 .byte $0F, $09, $19, $29
 ; sprites
-.byte $0F, $00, $10, $30
+.byte $0F, $14, $24, $34
 .byte $0F, $06, $16, $26
 .byte $0F, $01, $21, $31
 .byte $0F, $09, $19, $29
@@ -151,6 +153,20 @@ sprites:
 .byte $F0, $0b, 3, $F8
 .byte $F8, $1a, 3, $F0
 .byte $F8, $1b, 3, $F8
+; PIP-1
+.byte $F0, $0c, 0, $F0
+.byte $F8, $1c, 0, $F0
+; PIP-2
+.byte $F0, $0c, 1, $F0
+.byte $F8, $1c, 1, $F0
+; PIP-3
+.byte $F0, $0c, 2, $F0
+.byte $F8, $1c, 2, $F0
+; PIP-4
+.byte $F0, $0c, 3, $F0
+.byte $F8, $1c, 3, $F0
+; CURSOR
+.byte $F0, $0d, 0, $F0
 
 board_nametable:
 .incbin "../assets/board.nam"
