@@ -92,6 +92,8 @@ load_sprites:
   CPX #$84        ; size of sprites list
   BNE load_sprites
 
+  JSR reset_pips
+
 vblankwait:       ; wait for another vblank before continuing
   BIT PPUSTATUS
   BPL vblankwait
@@ -103,6 +105,46 @@ vblankwait:       ; wait for another vblank before continuing
 
 forever:
   JMP forever
+.endproc
+
+.proc reset_pips
+  ;; TODO - move pips to initial position
+  LDX #0
+  LDY #$7a
+  JSR move_pip
+  LDX #1
+  LDY #$8a
+  JSR move_pip
+  LDX #2
+  LDY #$9a
+  JSR move_pip
+  LDX #3
+  LDY #$aa
+  JSR move_pip
+
+  RTS
+.endproc
+
+.proc move_pip
+  ; X = pip, Y=(x,y) position
+  TXA
+  ASL
+  ASL
+  ASL
+  TAX
+  TYA
+  AND #%11110000
+  STA PIPS_ADDR+3,X
+  STA PIPS_ADDR+7,X
+  TYA
+  ASL
+  ASL
+  ASL
+  ASL
+  STA PIPS_ADDR,X
+  ORA #%00001000
+  STA PIPS_ADDR+4,X
+  RTS
 .endproc
 
 .segment "VECTORS"
