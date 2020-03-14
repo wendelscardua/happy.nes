@@ -131,19 +131,43 @@ forever:
   ASL
   ASL
   ASL
-  TAX
+  TAX ; X = 8*pip
   TYA
-  AND #%11110000
+  AND #%11110000 ; A := (x,0)
   STA PIPS_ADDR+3,X
   STA PIPS_ADDR+7,X
   TYA
   ASL
   ASL
   ASL
-  ASL
+  ASL ; A := (y,0)
   STA PIPS_ADDR,X
-  ORA #%00001000
+  ORA #%00001000  ; A := (y,8)
   STA PIPS_ADDR+4,X
+  TXA
+  AND #%00001000 ; A := 8*pip & 8 == (pip&1)*8
+  LSR ; A := (pip&1)*4
+  TAY
+  CLC
+  ADC PIPS_ADDR,X
+  STA PIPS_ADDR,X
+  TYA
+  CLC
+  ADC PIPS_ADDR+4,X
+  STA PIPS_ADDR+4,X
+
+  TXA
+  AND #%00010000 ; A := 8 * pip & 16 == (pip & 2) * 8
+  LSR
+  LSR ; A := (pip & 2) * 2
+  TAY
+  CLC
+  ADC PIPS_ADDR+3,X
+  STA PIPS_ADDR+3,X
+  TYA
+  CLC
+  ADC PIPS_ADDR+7,X
+  STA PIPS_ADDR+7,X
   RTS
 .endproc
 
