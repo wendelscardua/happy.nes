@@ -108,7 +108,7 @@ forever:
 .endproc
 
 .proc reset_pips
-  ;; TODO - move pips to initial position
+  ; move pips to initial position
   LDX #0
   LDY #$7a
   JSR move_pip
@@ -127,6 +127,7 @@ forever:
 
 .proc move_pip
   ; X = pip, Y=(x,y) position
+  ; Move (pip)th pip sprite to (x,y) position (+dx,+dy) based on pip
   TXA
   ASL
   ASL
