@@ -113,13 +113,13 @@ forever:
   LDY #$7a
   JSR move_pip
   LDX #1
-  LDY #$8a
+  LDY #$7a
   JSR move_pip
   LDX #2
-  LDY #$9a
+  LDY #$7a
   JSR move_pip
   LDX #3
-  LDY #$aa
+  LDY #$7a
   JSR move_pip
 
   RTS
@@ -144,9 +144,10 @@ forever:
   STA PIPS_ADDR,X
   ORA #%00001000  ; A := (y,8)
   STA PIPS_ADDR+4,X
+
   TXA
   AND #%00001000 ; A := 8*pip & 8 == (pip&1)*8
-  LSR ; A := (pip&1)*4
+  ORA #%00000100 ; A += 4
   TAY
   CLC
   ADC PIPS_ADDR,X
@@ -158,8 +159,7 @@ forever:
 
   TXA
   AND #%00010000 ; A := 8 * pip & 16 == (pip & 2) * 8
-  LSR
-  LSR ; A := (pip & 2) * 2
+  LSR ; A := (pip & 2) * 4
   TAY
   CLC
   ADC PIPS_ADDR+3,X
