@@ -27,6 +27,19 @@ current_player: .res 1
 .proc nmi_handler
   JSR readjoy
 
+;; XXX - debug keypress
+  LDA pressed_buttons
+  AND #BUTTON_A
+  BEQ not_pressed_button_A
+  INC current_player
+  LDA #%11
+  AND current_player
+  STA current_player
+;; XXX - end of debug keypress
+
+
+not_pressed_button_A:
+
   ; Refresh OAM
   LDA #$00
   STA OAMADDR
