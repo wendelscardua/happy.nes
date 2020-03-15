@@ -118,6 +118,7 @@ forever:
   ; set players position
   ; move pips to initial position
   LDA #0
+  STA current_player
   LDX #0
   LDY cell_position
 iterate_players:
