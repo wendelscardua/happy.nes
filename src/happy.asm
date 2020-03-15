@@ -8,6 +8,8 @@ CURSOR_ADDR = $0280
 .zeropage
 .import buttons
 addr_ptr: .res 2
+player_position: .res 8
+current_player: .res 1
 
 .segment "CODE"
 
@@ -92,7 +94,8 @@ load_sprites:
   CPX #$84        ; size of sprites list
   BNE load_sprites
 
-  JSR reset_pips
+  JSR reset_players
+
 
 vblankwait:       ; wait for another vblank before continuing
   BIT PPUSTATUS
@@ -107,20 +110,18 @@ forever:
   JMP forever
 .endproc
 
-.proc reset_pips
+.proc reset_players
+  ; set players position
   ; move pips to initial position
+  LDA #0
   LDX #0
-  LDY #$7a
+  LDY cell_position
+iterate_players:
+  STA player_position,X
   JSR move_pip
-  LDX #1
-  LDY #$7a
-  JSR move_pip
-  LDX #2
-  LDY #$7a
-  JSR move_pip
-  LDX #3
-  LDY #$7a
-  JSR move_pip
+  INX
+  CPX #4
+  BNE iterate_players
 
   RTS
 .endproc
@@ -128,7 +129,12 @@ forever:
 .proc move_pip
   ; X = pip, Y=(x,y) position
   ; Move (pip)th pip sprite to (x,y) position (+dx,+dy) based on pip
+  ; - preserves X,Y,A
+  PHA ; save A
+  TYA
+  PHA ; save Y
   TXA
+  PHA ; save X
   ASL
   ASL
   ASL
@@ -169,6 +175,11 @@ forever:
   CLC
   ADC PIPS_ADDR+7,X
   STA PIPS_ADDR+7,X
+  PLA
+  TAX ; restore X
+  PLA
+  TAY ; restore Y
+  PLA ; restore A
   RTS
 .endproc
 
