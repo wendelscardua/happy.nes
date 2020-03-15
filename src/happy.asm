@@ -54,9 +54,9 @@ load_palettes:
 load_board_background:
   LDA PPUSTATUS
   LDA #$20
-  STX PPUADDR
+  STA PPUADDR
   LDA #$00
-  STX PPUADDR
+  STA PPUADDR
 
   lda #<board_nametable
   sta addr_ptr
