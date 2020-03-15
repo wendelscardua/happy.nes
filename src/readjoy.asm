@@ -3,11 +3,17 @@
 ; we reserve one byte for storing the data that is read from controller
 .zeropage
 buttons: .res 1
+last_frame_buttons: .res 1
+released_buttons: .res 1
+pressed_buttons: .res 1
 
 ; buttons layout:
 ; A B Select Start Up Down Left Right
 
 .export buttons
+.export last_frame_buttons
+.export pressed_buttons
+.export released_buttons
 
 .segment "CODE"
 
@@ -15,6 +21,8 @@ buttons: .res 1
 ; so we're hitting two birds with one stone here
 .export readjoy
 .proc readjoy
+    lda buttons
+    sta last_frame_buttons
     lda #$01
     ; While the strobe bit is set, buttons will be continuously reloaded.
     ; This means that reading from JOYPAD1 will only return the state of the
@@ -30,5 +38,13 @@ loop:
     lsr a	       ; bit 0 -> Carry
     rol buttons  ; Carry -> bit 0; bit 7 -> Carry
     bcc loop
+    lda buttons
+    eor #%11111111
+    and last_frame_buttons
+    sta released_buttons
+    lda last_frame_buttons
+    eor #%11111111
+    and buttons
+    sta pressed_buttons
     rts
 .endproc

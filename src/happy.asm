@@ -7,6 +7,10 @@ CURSOR_ADDR = $0280
 
 .zeropage
 .import buttons
+.import last_frame_buttons
+.import released_buttons
+.import pressed_buttons
+
 addr_ptr: .res 2
 player_position: .res 8
 current_player: .res 1
