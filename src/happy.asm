@@ -209,12 +209,12 @@ iterate_players:
   STA PPUADDR
   TYA
   STA PPUADDR
-  LDX #0
+  LDY #0
 writing_loop:
-  LDA (addr_ptr),X
+  lda (addr_ptr), Y
   BEQ reset_origin
   STA PPUDATA
-  INX
+  INY
   JMP writing_loop
 reset_origin:
   LDA PPUSTATUS
