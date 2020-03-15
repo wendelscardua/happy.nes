@@ -188,6 +188,29 @@ iterate_players:
   RTS
 .endproc
 
+.proc write_tiles
+  ; addr_ptr - point to string start
+  ; X,Y - PPU target (e.g $20, $00 = origin)
+  LDA PPUSTATUS
+  TXA
+  STA PPUADDR
+  TYA
+  STA PPUADDR
+  LDX #0
+writing_loop:
+  LDA (addr_ptr),X
+  BEQ reset_origin
+  STA PPUDATA
+  INX
+  JMP writing_loop
+reset_origin:
+  LDA PPUSTATUS
+  LDA #$20
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
+.endproc
+
 .segment "VECTORS"
 .addr nmi_handler, reset_handler, irq_handler
 
