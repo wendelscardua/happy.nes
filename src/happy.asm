@@ -201,6 +201,59 @@ iterate_players:
   RTS
 .endproc
 
+.proc move_die
+  ; X = die, Y=(x,y) position
+  ; Move (die)th die sprite to (x,y) position
+  ; - preserves X,Y,A
+  PHA ; save A
+  TYA
+  PHA ; save Y
+  TXA
+  PHA ; save X
+  ASL
+  ASL
+  ASL
+  ASL
+  TAX ; X = 16*die
+  TYA
+  AND #%11110000 ; A := (x,0)
+  STA DICE_ADDR+3,X
+  STA DICE_ADDR+11,X
+  ORA #%00001000 ; A := (x,8)
+  STA DICE_ADDR+7,X
+  STA DICE_ADDR+15,X
+  TYA
+  ASL
+  ASL
+  ASL
+  ASL ; A := (y,0)
+  STA DICE_ADDR,X
+  STA DICE_ADDR+4,X
+  ORA #%00001000  ; A := (y,8)
+  STA DICE_ADDR+8,X
+  STA DICE_ADDR+12,X
+
+  PLA
+  TAX ; restore X
+  PLA
+  TAY ; restore Y
+  PLA ; restore A
+  RTS
+.endproc
+
+.proc hide_die
+  ; X = die
+  ; Hides die (move to ($F0, $F0))
+  ; - preserves X,Y,A
+  PHA ; save Y
+  LDX #$F0
+  LDY #$F0
+  JSR move_die
+  PLA
+  TAY ; restore Y
+  RTS
+.endproc
+
 .proc write_tiles
   ; addr_ptr - point to string start
   ; X,Y - PPU target (e.g $20, $00 = origin)
