@@ -27,6 +27,7 @@ game_state: .res 1
 
 .import reset_handler
 .import readjoy
+.import rand
 
 .macro print xpos, ypos, string
   LDA #<string
@@ -310,6 +311,15 @@ reset_origin:
 .endproc
 
 .proc game_state_before_start
+  JSR readjoy
+  LDA pressed_buttons
+  AND #BUTTON_START
+  BEQ not_start
+  print #$23, #$20, string_clear_32
+  print #$23, #$22, string_press_a_to_roll
+  LDA #STATE_PLAYER_WILL_ROLL
+  STA game_state
+not_start:
   RTS
 .endproc
 
@@ -487,7 +497,7 @@ string_press_start:
 .byte $10, $12, $05, $13, $13, $FF, $13, $14, $01, $12, $14, $00
 
 string_press_a_to_roll:
-.byte $10, $12, $05, $13, $13, $FF, $01, $20, $14, $0F, $FF, $12, $0F, $0C, $0C, $00
+.byte $10, $12, $05, $13, $13, $FF, $01, $FF, $14, $0F, $FF, $12, $0F, $0C, $0C, $00
 
 string_clear_32:
 .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
