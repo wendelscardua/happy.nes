@@ -5,11 +5,11 @@ DICE_ADDR = $0200
 PIPS_ADDR = $0260
 CURSOR_ADDR = $0280
 
-STATE_BEFORE_START = 1 ; e.g. "press start to play"
-STATE_PLAYER_WILL_ROLL = 2 ; e.g. "press A to roll die"
-STATE_DICE_ROLLING = 3 ; animate dice rolling?
-STATE_MOVEMENT = 4 ; while there are available steps, move; choose direction if needed
-STATE_END = 5 ; game ended; "play again?"
+STATE_BEFORE_START = 0 ; e.g. "press start to play"
+STATE_PLAYER_WILL_ROLL = 1 ; e.g. "press A to roll die"
+STATE_DICE_ROLLING = 2 ; animate dice rolling?
+STATE_MOVEMENT = 3 ; while there are available steps, move; choose direction if needed
+STATE_ENDED = 4 ; game ended; "play again?"
 
 .zeropage
 .import buttons
@@ -33,20 +33,19 @@ game_state: .res 1
 .endproc
 
 .proc nmi_handler
-  JSR readjoy
-
 ;; XXX - debug keypress
-  LDA pressed_buttons
-  AND #BUTTON_A
-  BEQ not_pressed_button_A
-  INC current_player
-  LDA #%11
-  AND current_player
-  STA current_player
+;  JSR readjoy
+;  LDA pressed_buttons
+;  AND #BUTTON_A
+;  BEQ not_pressed_button_A
+;  INC current_player
+;  LDA #%11
+;  AND current_player
+;  STA current_player
+;not_pressed_button_A:
 ;; XXX - end of debug keypress
 
-
-not_pressed_button_A:
+  JSR game_state_handler
 
   ; Refresh OAM
   LDA #$00
@@ -285,6 +284,39 @@ reset_origin:
   STA PPUADDR
   LDA #$00
   STA PPUADDR
+  RTS
+.endproc
+
+.proc game_state_handler
+  ; Uses RTS Trick
+  LDA game_state
+  ASL
+  TAX
+  LDA game_state_handlers+1, X
+  PHA
+  LDA game_state_handlers, X
+  PHA
+  RTS
+.endproc
+
+.proc game_state_before_start
+  RTS
+.endproc
+
+.proc game_state_player_will_roll
+  RTS
+.endproc
+
+.proc game_state_dice_rolling
+  RTS
+.endproc
+
+.proc game_state_movement
+  RTS
+.endproc
+
+.proc game_state_ended
+  RTS
 .endproc
 
 .segment "VECTORS"
@@ -349,6 +381,14 @@ sprites:
 .byte $F8, $1c, 3, $F0
 ; CURSOR
 .byte $F0, $0d, 0, $F0
+
+;; RTS Trick for game state handlers
+game_state_handlers:
+  .word game_state_before_start-1
+  .word game_state_player_will_roll-1
+  .word game_state_dice_rolling-1
+  .word game_state_movement-1
+  .word game_state_ended-1
 
 
 ;; Board description
