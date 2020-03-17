@@ -348,7 +348,7 @@ reset_origin:
   LDA pressed_buttons
   AND #BUTTON_START
   BEQ not_start
-  print #$23, #$20, string_clear_32
+  print #$23, #$20, string_clear_16
   print #$23, #$22, string_player_n
   print #$23, #$42, string_press_a_to_roll
   LDA #STATE_PLAYER_WILL_ROLL
@@ -359,6 +359,20 @@ not_start:
 .endproc
 
 .proc game_state_player_will_roll
+  JSR readjoy
+  LDA pressed_buttons
+  AND #BUTTON_A
+  BEQ not_roll
+  print #$23, #$20, string_clear_16
+  print #$23, #$40, string_clear_16
+  CLC
+  LDA #1
+  ADC current_player
+  AND #%11
+  STA current_player
+  print #$23, #$22, string_player_n
+  print #$23, #$42, string_press_a_to_roll
+not_roll:
   RTS
 .endproc
 
@@ -531,15 +545,13 @@ cell_alt_target:
 string_press_start:
 .byte $10, $12, $05, $13, $13, $FF, $13, $14, $01, $12, $14, $00
 
-string_player_n:
-.byte $10, $0C, $01, $19, $05, $12, $FF, $FE, $00
-
 string_press_a_to_roll:
 .byte $10, $12, $05, $13, $13, $FF, $01, $FF, $14, $0F, $FF, $12, $0F, $0C, $0C, $00
 
-string_clear_32:
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+string_player_n:
+.byte $10, $0C, $01, $19, $05, $12, $FF, $FE, $00
+
+string_clear_16:
 .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
 .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00
 
