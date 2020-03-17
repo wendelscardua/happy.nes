@@ -348,7 +348,7 @@ reset_origin:
   LDA pressed_buttons
   AND #BUTTON_START
   BEQ not_start
-  print #$23, #$20, string_clear_16
+  print #$23, #$22, string_clear_16
   print #$23, #$22, string_player_n
   print #$23, #$42, string_press_a_to_roll
   LDA #STATE_PLAYER_WILL_ROLL
@@ -363,8 +363,8 @@ not_start:
   LDA pressed_buttons
   AND #BUTTON_A
   BEQ not_roll
-  print #$23, #$20, string_clear_16
-  print #$23, #$40, string_clear_16
+  print #$23, #$22, string_clear_16
+  print #$23, #$42, string_clear_16
   LDA #STATE_DICE_ROLLING
   STA game_state
 not_roll:
