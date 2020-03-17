@@ -365,26 +365,33 @@ not_start:
   BEQ not_roll
   print #$23, #$20, string_clear_16
   print #$23, #$40, string_clear_16
-  CLC
-  LDA #1
-  ADC current_player
-  AND #%11
-  STA current_player
-  print #$23, #$22, string_player_n
-  print #$23, #$42, string_press_a_to_roll
+  LDA #STATE_DICE_ROLLING
+  STA game_state
 not_roll:
   RTS
 .endproc
 
 .proc game_state_dice_rolling
+  ; TODO: roll dice cosmetically, then choose number of steps and begin movement
   RTS
 .endproc
 
 .proc game_state_movement
+  ; TODO: while there are steps available, move (ask if there are multiple paths)
+
+  ;  TODO: after moving, begin next player turn
+  ;  CLC
+  ;  LDA #1
+  ;  ADC current_player
+  ;  AND #%11
+  ;  STA current_player
+  ;  print #$23, #$22, string_player_n
+  ;  print #$23, #$42, string_press_a_to_roll
   RTS
 .endproc
 
 .proc game_state_ended
+  ; TODO: game over, restart?
   RTS
 .endproc
 
