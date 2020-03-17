@@ -43,18 +43,6 @@ rng_seed: .res 2
 .endproc
 
 .proc nmi_handler
-;; XXX - debug keypress
-;  JSR readjoy
-;  LDA pressed_buttons
-;  AND #BUTTON_A
-;  BEQ not_pressed_button_A
-;  INC current_player
-;  LDA #%11
-;  AND current_player
-;  STA current_player
-;not_pressed_button_A:
-;; XXX - end of debug keypress
-
   JSR game_state_handler
 
   ; Refresh OAM
@@ -310,9 +298,14 @@ iterate_players:
   RTS
 .endproc
 
+CURRENT_PLAYER_SYMBOL = $FE
+DIGIT_TILES = $1B
 .proc write_tiles
-  ; addr_ptr - point to string start
+  ; write tiles on background
+  ; addr_ptr - point to string starting point (strings end with $00)
   ; X,Y - PPU target (e.g $20, $00 = origin)
+  ; When the tile is #CURRENT_PLAYER_SYMBOL, the current player number
+  ; is written instead (e.g. '1' tile for current_player 0)
   LDA PPUSTATUS
   STX PPUADDR
   STY PPUADDR
@@ -320,6 +313,12 @@ iterate_players:
 writing_loop:
   LDA (addr_ptr), Y
   BEQ reset_origin
+  CMP #CURRENT_PLAYER_SYMBOL
+  BNE write_tile
+  CLC
+  LDA #DIGIT_TILES+1
+  ADC current_player
+write_tile:
   STA PPUDATA
   INY
   JMP writing_loop
@@ -350,7 +349,8 @@ reset_origin:
   AND #BUTTON_START
   BEQ not_start
   print #$23, #$20, string_clear_32
-  print #$23, #$22, string_press_a_to_roll
+  print #$23, #$22, string_player_n
+  print #$23, #$42, string_press_a_to_roll
   LDA #STATE_PLAYER_WILL_ROLL
   STA game_state
 not_start:
@@ -530,6 +530,9 @@ cell_alt_target:
 
 string_press_start:
 .byte $10, $12, $05, $13, $13, $FF, $13, $14, $01, $12, $14, $00
+
+string_player_n:
+.byte $10, $0C, $01, $19, $05, $12, $FF, $FE, $00
 
 string_press_a_to_roll:
 .byte $10, $12, $05, $13, $13, $FF, $01, $FF, $14, $0F, $FF, $12, $0F, $0C, $0C, $00
