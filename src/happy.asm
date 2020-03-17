@@ -16,18 +16,17 @@ STATE_ENDED = 4 ; game ended; "play again?"
 .import last_frame_buttons
 .import released_buttons
 .import pressed_buttons
-.import rng_seed
 
 addr_ptr: .res 2 ; generic address pointer
 player_position: .res 8 ; array of players current cells
 current_player: .res 1
 game_state: .res 1
+rng_seed: .res 2
 
 .segment "CODE"
 
 .import reset_handler
 .import readjoy
-.import rand
 
 .macro print xpos, ypos, string
   LDA #<string
@@ -134,6 +133,11 @@ load_sprites:
   LDA #STATE_BEFORE_START
   STA game_state
 
+  LDA #$10
+  STA rng_seed
+  LDA #$25
+  STA rng_seed+1
+
 vblankwait:       ; wait for another vblank before continuing
   BIT PPUSTATUS
   BPL vblankwait
@@ -147,6 +151,36 @@ vblankwait:       ; wait for another vblank before continuing
 
 forever:
   JMP forever
+.endproc
+
+.proc rand
+  ; generate random number (0-255) in A
+  ; - clobbers Y
+  LDA rng_seed+1
+  TAY ; store copy of high byte
+  ; compute rng_seed+1 ($39>>1 = %11100)
+  LSR ; shift to consume zeroes on left...
+  LSR
+  LSR
+  STA rng_seed+1 ; now recreate the remaining bits in reverse order... %111
+  LSR
+  EOR rng_seed+1
+  LSR
+  EOR rng_seed+1
+  EOR rng_seed ; recombine with original low byte
+  STA rng_seed+1
+  ; compute rng_seed ($39 = %111001)
+  TYA ; original high byte
+  STA rng_seed
+  ASL
+  EOR rng_seed
+  ASL
+  EOR rng_seed
+  ASL
+  ASL
+  ASL
+  EOR rng_seed
+  STA rng_seed
 .endproc
 
 .proc reset_players
@@ -320,6 +354,7 @@ reset_origin:
   LDA #STATE_PLAYER_WILL_ROLL
   STA game_state
 not_start:
+  JSR rand
   RTS
 .endproc
 
