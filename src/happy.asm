@@ -10,6 +10,7 @@ CURSOR_ADDR = $0280
 .import last_frame_buttons
 .import released_buttons
 .import pressed_buttons
+.import rng_seed
 
 addr_ptr: .res 2
 player_position: .res 8
