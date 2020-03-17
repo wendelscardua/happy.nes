@@ -28,6 +28,16 @@ game_state: .res 1
 .import reset_handler
 .import readjoy
 
+.macro print xpos, ypos, string
+  LDA #<string
+  STA addr_ptr
+  LDA #>string
+  STA addr_ptr+1
+  LDX xpos
+  LDY ypos
+  JSR write_tiles
+.endmacro
+
 .proc irq_handler
   RTI
 .endproc
@@ -132,13 +142,7 @@ vblankwait:       ; wait for another vblank before continuing
   LDA #%00011110  ; turn on screen
   STA PPUMASK
 
-  LDA #<string_press_start
-  STA addr_ptr
-  LDA #>string_press_start
-  STA addr_ptr+1
-  LDX #$23
-  LDY #$22
-  JSR write_tiles
+  print #$23, #$22, string_press_start
 
 forever:
   JMP forever
