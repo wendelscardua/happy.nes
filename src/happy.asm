@@ -5,6 +5,12 @@ DICE_ADDR = $0200
 PIPS_ADDR = $0260
 CURSOR_ADDR = $0280
 
+STATE_BEFORE_START = 1 ; e.g. "press start to play"
+STATE_PLAYER_WILL_ROLL = 2 ; e.g. "press A to roll die"
+STATE_DICE_ROLLING = 3 ; animate dice rolling?
+STATE_MOVEMENT = 4 ; while there are available steps, move; choose direction if needed
+STATE_END = 5 ; game ended; "play again?"
+
 .zeropage
 .import buttons
 .import last_frame_buttons
@@ -12,9 +18,10 @@ CURSOR_ADDR = $0280
 .import pressed_buttons
 .import rng_seed
 
-addr_ptr: .res 2
-player_position: .res 8
+addr_ptr: .res 2 ; generic address pointer
+player_position: .res 8 ; array of players current cells
 current_player: .res 1
+game_state: .res 1
 
 .segment "CODE"
 
@@ -114,6 +121,8 @@ load_sprites:
 
   JSR reset_players
 
+  LDA #STATE_BEFORE_START
+  STA game_state
 
 vblankwait:       ; wait for another vblank before continuing
   BIT PPUSTATUS
