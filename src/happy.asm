@@ -132,6 +132,14 @@ vblankwait:       ; wait for another vblank before continuing
   LDA #%00011110  ; turn on screen
   STA PPUMASK
 
+  LDA #<string_press_start
+  STA addr_ptr
+  LDA #>string_press_start
+  STA addr_ptr+1
+  LDX #$23
+  LDY #$22
+  JSR write_tiles
+
 forever:
   JMP forever
 .endproc
@@ -267,13 +275,11 @@ iterate_players:
   ; addr_ptr - point to string start
   ; X,Y - PPU target (e.g $20, $00 = origin)
   LDA PPUSTATUS
-  TXA
-  STA PPUADDR
-  TYA
-  STA PPUADDR
+  STX PPUADDR
+  STY PPUADDR
   LDY #0
 writing_loop:
-  lda (addr_ptr), Y
+  LDA (addr_ptr), Y
   BEQ reset_origin
   STA PPUDATA
   INY
@@ -472,6 +478,18 @@ cell_alt_target:
 .byte $6D, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $82 ; 7
 .byte $7E, $82, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; 8
 .byte $00, $00, $00, $00  ; 9
+
+string_press_start:
+.byte $10, $12, $05, $13, $13, $FF, $13, $14, $01, $12, $14, $00
+
+string_press_a_to_roll:
+.byte $10, $12, $05, $13, $13, $FF, $01, $20, $14, $0F, $FF, $12, $0F, $0C, $0C, $00
+
+string_clear_32:
+.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00
 
 board_nametable:
 .incbin "../assets/board.nam"
