@@ -22,6 +22,7 @@ player_position: .res 8 ; array of players current cells
 current_player: .res 1
 game_state: .res 1
 rng_seed: .res 2
+current_die: .res 1
 
 .segment "CODE"
 
@@ -169,6 +170,17 @@ forever:
   ASL
   EOR rng_seed
   STA rng_seed
+  RTS
+.endproc
+
+.proc rand_die
+  ; generate random number (0-5) in A
+reroll:
+  JSR rand
+  AND #%111
+  CMP #6
+  BCS reroll
+  RTS
 .endproc
 
 .proc reset_players
@@ -373,6 +385,16 @@ not_roll:
 
 .proc game_state_dice_rolling
   ; TODO: roll dice cosmetically, then choose number of steps and begin movement
+  LDX current_die
+  JSR hide_die
+  JSR rand_die
+  STA current_die
+  TAX
+  LDY #$78
+  JSR move_die
+
+  LDA #STATE_MOVEMENT
+  STA game_state
   RTS
 .endproc
 
