@@ -302,8 +302,7 @@ iterate_players:
   ; Hides die (move to ($F0, $F0))
   ; - preserves X,Y,A
   PHA ; save Y
-  LDX #$F0
-  LDY #$F0
+  LDY #$FF
   JSR move_die
   PLA
   TAY ; restore Y
