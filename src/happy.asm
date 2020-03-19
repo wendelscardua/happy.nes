@@ -23,6 +23,7 @@ current_player: .res 1
 game_state: .res 1
 rng_seed: .res 2
 current_die: .res 1
+delay: .res 1
 
 .segment "CODE"
 
@@ -394,20 +395,56 @@ not_roll:
 
   LDA #STATE_MOVEMENT
   STA game_state
+  LDA #30
+  STA delay
   RTS
 .endproc
 
 .proc game_state_movement
   ; TODO: while there are steps available, move (ask if there are multiple paths)
+  LDA delay
+  BEQ move
+  DEC delay
+  RTS
+move:
+  LDA #30
+  STA delay
+
+  LDX current_player
+  LDY player_position,X
+  LDX cell_target,Y
+  LDY current_player
+  STX player_position,Y
+  LDY cell_position,X
+  LDX current_player
+  JSR move_pip
+
+  LDA current_die
+  BEQ finish_movement
+  TAX
+  JSR hide_die
+  DEX
+  STX current_die
+  LDY #$78
+  JSR move_die
+  RTS
 
   ;  TODO: after moving, begin next player turn
-  ;  CLC
-  ;  LDA #1
-  ;  ADC current_player
-  ;  AND #%11
-  ;  STA current_player
-  ;  print #$23, #$22, string_player_n
-  ;  print #$23, #$42, string_press_a_to_roll
+finish_movement:
+  LDX current_die
+  JSR hide_die
+
+  CLC
+  LDA #1
+  ADC current_player
+  AND #%11
+  STA current_player
+
+print #$23, #$22, string_player_n
+  print #$23, #$42, string_press_a_to_roll
+
+LDA #STATE_PLAYER_WILL_ROLL
+  STA game_state
   RTS
 .endproc
 
@@ -521,6 +558,7 @@ game_state_handlers:
 ; A + <0D v0E     + <0B >0C     + <09 >0A     + <07 >08     + <04 v05 >06 + <02 >03     + <00 >01     + <92 >93     + <90 >91     + <8E >8F     + <8C >8D     + <7F v80 >81 + <7D >7E     + v7B >7C     + A
 ;   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ;          1             2             3             4             5             6             7             8             9             A             B             C             D             E
+;
 
 ;; Cell positions
 ;; According to the board description above, this is a list of coordinates for each cell
@@ -537,7 +575,7 @@ cell_position:
 .byte $D1, $E1, $E1, $E2, $E2, $E3, $E3, $D3, $D3, $D3, $C3, $C3, $D4, $D4, $D5, $D5 ; 6
 .byte $D5, $E5, $E5, $E6, $E6, $E7, $E7, $E8, $E8, $E9, $E9, $EA, $EA, $DA, $DA, $CA ; 7
 .byte $CA, $CA, $C9, $C9, $C8, $C8, $C7, $C7, $C6, $C6, $C5, $C5, $BA, $BA, $AA, $AA ; 8
-.byte $9A, $9A, $8A, $8A  ; 9
+.byte $9A, $9A, $8A, $8A ; 9
 
 ;; Cell target (main)
 ;; Where the player can go from each cell
