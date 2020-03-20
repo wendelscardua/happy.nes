@@ -10,6 +10,7 @@ STATE_PLAYER_WILL_ROLL = 1 ; e.g. "press A to roll die"
 STATE_DICE_ROLLING = 2 ; animate dice rolling?
 STATE_MOVEMENT = 3 ; while there are available steps, move; choose direction if needed
 STATE_ENDED = 4 ; game ended; "play again?"
+STATE_WHERE_TO = 5 ; asking the new direction between two options
 
 .zeropage
 .import buttons
@@ -24,6 +25,9 @@ game_state: .res 1
 rng_seed: .res 2
 current_die: .res 1
 delay: .res 1
+choice: .res 1
+alt_choice: .res 1
+choice_flick: .res 1
 
 .segment "CODE"
 
@@ -375,7 +379,6 @@ not_start:
   LDA pressed_buttons
   AND #BUTTON_A
   BEQ not_roll
-  print #$23, #$22, string_clear_16
   print #$23, #$42, string_clear_16
   LDA #STATE_DICE_ROLLING
   STA game_state
@@ -397,11 +400,15 @@ not_roll:
   STA game_state
   LDA #30
   STA delay
+  LDA #0
+  STA choice
   RTS
 .endproc
 
 .proc game_state_movement
-  ; TODO: while there are steps available, move (ask if there are multiple paths)
+  LDX choice    ; if player has choosen a target between two options, skip to it
+  BNE any_path
+
   LDA delay
   BEQ move
   DEC delay
@@ -412,7 +419,31 @@ move:
 
   LDX current_player
   LDY player_position,X
+  LDX cell_alt_target,Y
+  BEQ single_path ; no need to choose
+
+  ; choosing state
+  STX alt_choice
   LDX cell_target,Y
+  STX choice
+  LDA #0
+  STA choice_flick
+
+  LDA #STATE_WHERE_TO
+  STA game_state
+
+  LDA #10
+  STA delay
+
+  print #$23, #$22, string_a_to_choose
+  print #$23, #$42, string_b_to_toggle
+
+  RTS
+single_path:
+  LDX cell_target,Y
+any_path:
+  LDA #0
+  STA choice
   LDY current_player
   STX player_position,Y
   LDY cell_position,X
@@ -440,16 +471,67 @@ finish_movement:
   AND #%11
   STA current_player
 
-print #$23, #$22, string_player_n
+  print #$23, #$22, string_player_n
   print #$23, #$42, string_press_a_to_roll
 
-LDA #STATE_PLAYER_WILL_ROLL
+  LDA #STATE_PLAYER_WILL_ROLL
   STA game_state
   RTS
 .endproc
 
 .proc game_state_ended
   ; TODO: game over, restart?
+  RTS
+.endproc
+
+.proc game_state_where_to
+  ; TODO: two paths, choose one
+  JSR readjoy
+  LDA pressed_buttons
+  AND #BUTTON_A
+  BEQ not_choose
+
+  print #$23, #$22, string_player_n
+  print #$23, #$42, string_clear_16
+
+  LDA #STATE_MOVEMENT
+  STA game_state
+  LDA #30
+  STA delay
+  RTS
+not_choose:
+  LDA pressed_buttons
+  AND #BUTTON_B
+  BEQ not_toggle
+  LDX choice
+  LDY alt_choice
+  STX alt_choice
+  STY choice
+  RTS
+not_toggle:
+  LDA delay
+  BEQ move
+  DEC delay
+  RTS
+move:
+  LDA #10
+  STA delay
+  LDA choice_flick
+  BEQ flick
+  DEC choice_flick
+
+  LDY current_player
+  LDX player_position,Y
+  LDY cell_position,X
+  LDX current_player
+  JSR move_pip
+  RTS
+flick:
+  INC choice_flick
+  LDX choice
+  LDY cell_position,X
+  LDX current_player
+  JSR move_pip
   RTS
 .endproc
 
@@ -523,6 +605,7 @@ game_state_handlers:
   .word game_state_dice_rolling-1
   .word game_state_movement-1
   .word game_state_ended-1
+  .word game_state_where_to-1
 
 
 ;; Board description
@@ -609,17 +692,22 @@ cell_alt_target:
 .byte $00, $00, $00, $00  ; 9
 
 string_press_start:
-.byte $10, $12, $05, $13, $13, $FF, $13, $14, $01, $12, $14, $00
+.byte $10, $12, $05, $13, $13, $FF, $13, $14, $01, $12, $14, $FF, $FF, $FF, $FF, $FF, $00
 
 string_press_a_to_roll:
-.byte $10, $12, $05, $13, $13, $FF, $01, $FF, $14, $0F, $FF, $12, $0F, $0C, $0C, $00
+.byte $10, $12, $05, $13, $13, $FF, $01, $FF, $14, $0F, $FF, $12, $0F, $0C, $0C, $FF, $00
 
 string_player_n:
-.byte $10, $0C, $01, $19, $05, $12, $FF, $FE, $00
+.byte $10, $0C, $01, $19, $05, $12, $FF, $FE, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00
+
+string_a_to_choose:
+.byte $01, $FF, $14, $0F, $FF, $03, $08, $0F, $0F, $13, $05, $FF, $FF, $FF, $FF, $FF, $00
+
+string_b_to_toggle:
+.byte $02, $FF, $14, $0F, $FF, $14, $0F, $07, $07, $0C, $05, $FF, $FF, $FF, $FF, $FF, $00
 
 string_clear_16:
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00
+.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00
 
 board_nametable:
 .incbin "../assets/board.nam"
