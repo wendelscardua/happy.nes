@@ -294,6 +294,13 @@ iterate_players:
   STA DICE_ADDR+8,X
   STA DICE_ADDR+12,X
 
+  ; color die
+  LDA current_player
+  STA DICE_ADDR+2,X
+  STA DICE_ADDR+6,X
+  STA DICE_ADDR+10,X
+  STA DICE_ADDR+14,X
+
   PLA
   TAX ; restore X
   PLA
