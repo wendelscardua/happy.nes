@@ -541,7 +541,6 @@ any_path:
   LDY cell_position,X
   LDX current_player
   JSR move_pip
-  JSR paint_cell
 
   LDA current_die
   BEQ finish_movement
