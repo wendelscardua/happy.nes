@@ -633,7 +633,7 @@ reset_origin:
   LDA #STATE_SYMBOLS_SETUP
   STA game_state
   LDA #0
-  STA temp_b
+  STA delay ; HACK: using delay as temp var
 not_start:
   JSR rand ; shuffle rng seed
   RTS
@@ -643,13 +643,20 @@ not_start:
   LDA symbol_positions+7 ; checking if all symbol positions are set
   BEQ skip               ; wait until fully setup in main loop
 
-  LDX temp_b
+  LDX delay
   LDY symbol_positions,X
   JSR draw_symbol
+  LDA delay
+  LSR
+  LSR
+  ORA #%10
+  TAX
+  JSR paint_cell
+  LDX delay
   INX
   CPX #8
   BEQ finish_setup
-  STX temp_b
+  STX delay
   RTS
 finish_setup:
   print #$23, #$22, string_clear_16
