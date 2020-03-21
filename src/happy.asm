@@ -263,8 +263,8 @@ iterate_players:
 .endproc
 
 .proc move_die
-  ; X = die, Y=(x,y) position
-  ; Move (die)th die sprite to (x,y) position
+  ; X = die, Y=(y,x) position
+  ; Move (die)th die sprite to (y,x) position
   ; - preserves X,Y,A
   PHA ; save A
   TYA
@@ -277,22 +277,22 @@ iterate_players:
   ASL
   TAX ; X = 16*die
   TYA
-  AND #%11110000 ; A := (x,0)
-  STA DICE_ADDR+3,X
-  STA DICE_ADDR+11,X
-  ORA #%00001000 ; A := (x,8)
-  STA DICE_ADDR+7,X
-  STA DICE_ADDR+15,X
+  AND #%11110000 ; A := (y,0)
+  STA DICE_ADDR,X
+  STA DICE_ADDR+4,X
+  ORA #%00001000 ; A := (y,8)
+  STA DICE_ADDR+8,X
+  STA DICE_ADDR+12,X
   TYA
   ASL
   ASL
   ASL
-  ASL ; A := (y,0)
-  STA DICE_ADDR,X
-  STA DICE_ADDR+4,X
-  ORA #%00001000  ; A := (y,8)
-  STA DICE_ADDR+8,X
-  STA DICE_ADDR+12,X
+  ASL ; A := (x,0)
+  STA DICE_ADDR+3,X
+  STA DICE_ADDR+11,X
+  ORA #%00001000  ; A := (x,8)
+  STA DICE_ADDR+7,X
+  STA DICE_ADDR+15,X
 
   ; color die
   LDA current_player
@@ -400,7 +400,7 @@ not_roll:
   JSR rand_die
   STA current_die
   TAX
-  LDY #$78
+  LDY #$87
   JSR move_die
 
   LDA #STATE_MOVEMENT
@@ -463,7 +463,7 @@ any_path:
   JSR hide_die
   DEX
   STX current_die
-  LDY #$78
+  LDY #$87
   JSR move_die
   RTS
 
