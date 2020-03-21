@@ -11,6 +11,7 @@ STATE_DICE_ROLLING = 2 ; animate dice rolling?
 STATE_MOVEMENT = 3 ; while there are available steps, move; choose direction if needed
 STATE_ENDED = 4 ; game ended; "play again?"
 STATE_WHERE_TO = 5 ; asking the new direction between two options
+STATE_SYMBOLS_SETUP = 6 ; vblank where we draw symbols before first roll
 
 .zeropage
 .import buttons
@@ -30,6 +31,8 @@ alt_choice: .res 1
 choice_flick: .res 1
 temp_a: .res 1
 temp_b: .res 1
+player_inventory: .res 8 ; array of player inventory
+symbol_positions: .res 8 ; array of symbol positions
 
 .segment "CODE"
 
@@ -146,6 +149,12 @@ vblankwait:       ; wait for another vblank before continuing
   print #$23, #$22, string_press_start
 
 forever:
+  LDA #STATE_SYMBOLS_SETUP
+  CMP game_state
+  BNE forever
+  LDA symbol_positions+7 ; checking if all symbol positions are set
+  BNE forever
+  JSR reset_symbol_positions ; reset symbol positions takes too long and requires a good rng seed
   JMP forever
 .endproc
 
@@ -204,6 +213,60 @@ iterate_players:
   CPX #4
   BNE iterate_players
 
+  RTS
+.endproc
+
+.proc rand_cell
+  ; generate random cell (2-95) in A
+reroll:
+  JSR rand
+  AND #%1111111
+  CMP #0
+  BEQ reroll
+  CMP #1
+  BEQ reroll
+  CMP #96
+  BCS reroll
+  RTS
+.endproc
+
+.proc reset_symbol_positions
+  PHA
+  TXA
+  PHA
+  TYA
+  PHA
+
+  LDX #0
+main_loop:
+  JSR rand_cell
+  TAY
+  LDA cell_position,Y
+  STA temp_a
+
+  TXA ; A = Y = X
+  TAY
+check_conflict:
+  JMP ok
+  DEY
+  LDA temp_a
+  CMP symbol_positions,Y
+  BEQ main_loop
+  TYA
+  JMP check_conflict
+
+ok:
+  LDA temp_a
+  STA symbol_positions,X
+  INX
+  CPX #8
+  BNE main_loop
+
+  PLA
+  TAY
+  PLA
+  TAX
+  PLA
   RTS
 .endproc
 
@@ -322,6 +385,119 @@ iterate_players:
   TAY ; restore Y
   RTS
 .endproc
+
+.proc draw_symbol
+  ; draw board symbol index X, on Y=(y,x) cell
+  ; - preserves X,Y
+  ; - clobbers A
+  TXA
+  PHA
+  TYA
+  PHA
+
+  CLC
+  ADC #$10
+  TAY      ; (y,x) = board coordinates, screen y is off by one
+
+  ; bg positions
+  ; offset = (y*2) * $20 + (x*2)
+  ; |offset        offset + 1   |
+  ; |offset + $20  offset + $21 |
+  ;
+  ; tiles
+  ; |$32 $33| + 2 * index
+  ; |$42 $43|
+
+  LDA #$20
+  STA addr_ptr+1
+  LDA #$00
+  STA addr_ptr
+
+  ; offset
+  TYA
+  ROL
+  ROL
+  ROL
+  AND #%11
+  CLC
+  ADC addr_ptr+1
+  STA addr_ptr+1 ; addr_ptr = $2000 + (y*2) * $20 // first 2 bits of y
+
+  TYA
+  AND #%11110000
+  ASL
+  ASL
+  CLC
+  ADC addr_ptr
+  STA addr_ptr
+  LDA #0
+  ADC addr_ptr+1
+  STA addr_ptr+1 ; addr_ptr += (y*2) * $20 // last 2 bits of y
+
+  TYA
+  ASL
+  AND #%00001111
+  CLC
+  ADC addr_ptr
+  STA addr_ptr
+  LDA #0
+  ADC addr_ptr+1
+  STA addr_ptr+1 ; addr_ptr += x * 2 // last 2 bits of y
+
+  LDA PPUSTATUS
+  LDA addr_ptr+1
+  STA PPUADDR
+  LDA addr_ptr
+  STA PPUADDR
+
+  CLC
+
+  TXA
+  AND #%11
+  ASL
+  STA temp_a ; temp_a = 2*index (bit 3 = color)
+
+  ADC #$32
+  STA PPUDATA
+  LDA temp_a
+  ADC #$33
+  STA PPUDATA
+
+  LDA #$20
+  ADC addr_ptr
+  STA addr_ptr
+  LDA #$00
+  ADC addr_ptr+1
+  STA addr_ptr+1
+
+
+  LDA addr_ptr+1
+  STA PPUADDR
+  LDA addr_ptr
+  STA PPUADDR
+
+  CLC
+
+  LDA temp_a
+  ADC #$42
+  STA PPUDATA
+  LDA temp_a
+  ADC #$43
+  STA PPUDATA
+
+  LDA PPUSTATUS
+  LDA #$20
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
+
+  PLA
+  TAY
+  PLA
+  TAX
+  RTS
+.endproc
+
 
 .proc paint_cell
   ; X = palette, Y=(y,x) cell
@@ -455,13 +631,36 @@ reset_origin:
   LDA pressed_buttons
   AND #BUTTON_START
   BEQ not_start
+
+  print #$23, #$22, string_clear_16
+  LDA #STATE_SYMBOLS_SETUP
+  STA game_state
+  LDA #0
+  STA temp_b
+not_start:
+  JSR rand ; shuffle rng seed
+  RTS
+.endproc
+
+.proc game_state_symbols_setup
+  LDA symbol_positions+7 ; checking if all symbol positions are set
+  BEQ skip               ; wait until fully setup in main loop
+
+  LDX temp_b
+  LDY symbol_positions,X
+  JSR draw_symbol
+  INX
+  CPX #8
+  BEQ finish_setup
+  STX temp_b
+  RTS
+finish_setup:
   print #$23, #$22, string_clear_16
   print #$23, #$22, string_player_n
   print #$23, #$42, string_press_a_to_roll
   LDA #STATE_PLAYER_WILL_ROLL
   STA game_state
-not_start:
-  JSR rand
+skip:
   RTS
 .endproc
 
@@ -698,6 +897,7 @@ game_state_handlers:
   .word game_state_movement-1
   .word game_state_ended-1
   .word game_state_where_to-1
+  .word game_state_symbols_setup-1
 
 
 ;; Board description
