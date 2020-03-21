@@ -206,8 +206,8 @@ iterate_players:
 .endproc
 
 .proc move_pip
-  ; X = pip, Y=(x,y) position
-  ; Move (pip)th pip sprite to (x,y) position (+dx,+dy) based on pip
+  ; X = pip, Y=(y,x) position
+  ; Move (pip)th pip sprite to (y,x) position (+dy,+dx) based on pip
   ; - preserves X,Y,A
   PHA ; save A
   TYA
@@ -219,17 +219,17 @@ iterate_players:
   ASL
   TAX ; X = 8*pip
   TYA
-  AND #%11110000 ; A := (x,0)
-  STA PIPS_ADDR+3,X
-  STA PIPS_ADDR+7,X
+  AND #%11110000 ; A := (y,0)
+  STA PIPS_ADDR,X
+  ORA #%00001000  ; A := (y,8)
+  STA PIPS_ADDR+4,X
   TYA
   ASL
   ASL
   ASL
-  ASL ; A := (y,0)
-  STA PIPS_ADDR,X
-  ORA #%00001000  ; A := (y,8)
-  STA PIPS_ADDR+4,X
+  ASL ; A := (x,0)
+  STA PIPS_ADDR+3,X
+  STA PIPS_ADDR+7,X
 
   TXA
   AND #%00001000 ; A := 8*pip & 8 == (pip&1)*8
@@ -652,20 +652,20 @@ game_state_handlers:
 
 ;; Cell positions
 ;; According to the board description above, this is a list of coordinates for each cell
-;; Coordinates are represented as #%xxxxyyyy
+;; Coordinates are represented as #%yyyyxxxx (y,x)
 
 cell_position:
 ;       0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F
-.byte $7A, $7A, $6A, $6A, $5A, $5A, $5A, $4A, $4A, $3A, $3A, $2A, $2A, $1A, $1A, $19 ; 0
-.byte $19, $18, $18, $17, $17, $16, $16, $15, $15, $14, $14, $13, $13, $12, $12, $11 ; 1
-.byte $11, $21, $21, $31, $31, $31, $32, $32, $33, $33, $43, $43, $53, $53, $63, $63 ; 2
-.byte $73, $73, $73, $74, $74, $75, $75, $76, $76, $66, $66, $56, $56, $57, $57, $58 ; 3
-.byte $58, $59, $59, $83, $83, $93, $93, $92, $92, $92, $91, $91, $81, $81, $71, $71 ; 4
-.byte $61, $61, $51, $51, $41, $41, $A2, $A2, $B2, $B2, $C2, $C2, $C2, $C1, $C1, $D1 ; 5
-.byte $D1, $E1, $E1, $E2, $E2, $E3, $E3, $D3, $D3, $D3, $C3, $C3, $D4, $D4, $D5, $D5 ; 6
-.byte $D5, $E5, $E5, $E6, $E6, $E7, $E7, $E8, $E8, $E9, $E9, $EA, $EA, $DA, $DA, $CA ; 7
-.byte $CA, $BA, $BA, $BA, $B9, $B9, $B8, $B8, $B7, $B7, $B6, $B6, $B5, $B5, $C5, $C5 ; 8
-.byte $AA, $AA, $9A, $9A, $8A, $8A ; 9
+.byte $A7, $A7, $A6, $A6, $A5, $A5, $A5, $A4, $A4, $A3, $A3, $A2, $A2, $A1, $A1, $91 ; 0
+.byte $91, $81, $81, $71, $71, $61, $61, $51, $51, $41, $41, $31, $31, $21, $21, $11 ; 1
+.byte $11, $12, $12, $13, $13, $13, $23, $23, $33, $33, $34, $34, $35, $35, $36, $36 ; 2
+.byte $37, $37, $37, $47, $47, $57, $57, $67, $67, $66, $66, $65, $65, $75, $75, $85 ; 3
+.byte $85, $95, $95, $38, $38, $39, $39, $29, $29, $29, $19, $19, $18, $18, $17, $17 ; 4
+.byte $16, $16, $15, $15, $14, $14, $2A, $2A, $2B, $2B, $2C, $2C, $2C, $1C, $1C, $1D ; 5
+.byte $1D, $1E, $1E, $2E, $2E, $3E, $3E, $3D, $3D, $3D, $3C, $3C, $4D, $4D, $5D, $5D ; 6
+.byte $5D, $5E, $5E, $6E, $6E, $7E, $7E, $8E, $8E, $9E, $9E, $AE, $AE, $AD, $AD, $AC ; 7
+.byte $AC, $AB, $AB, $AB, $9B, $9B, $8B, $8B, $7B, $7B, $6B, $6B, $5B, $5B, $5C, $5C ; 8
+.byte $AA, $AA, $A9, $A9, $A8, $A8 ; 9
 
 ;; Cell target (main)
 ;; Where the player can go from each cell
