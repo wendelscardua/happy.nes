@@ -28,6 +28,8 @@ delay: .res 1
 choice: .res 1
 alt_choice: .res 1
 choice_flick: .res 1
+temp_a: .res 1
+temp_b: .res 1
 
 .segment "CODE"
 
@@ -321,6 +323,88 @@ iterate_players:
   RTS
 .endproc
 
+.proc paint_cell
+  ; X = palette, Y=(y,x) cell
+  ; cobbles A, Y
+  TYA
+  CLC
+  ADC #$10
+  TAY      ; (y,x) = board coordinates, screen y is off by one
+
+  LSR
+  AND #%111
+  STA temp_a       ; temp_a := x/2
+  TYA
+  AND #%11100000
+  LSR
+  LSR              ; A := y/2 * 8
+  ORA temp_a       ; A := y/2 * 8 + x/2 == byte position in attribute table
+  STA temp_a
+
+  LDA #$23
+  STA addr_ptr+1
+  LDA #$C0
+  STA addr_ptr
+  CLC
+  LDA temp_a
+  ADC addr_ptr
+  STA addr_ptr
+  LDA #$00
+  ADC addr_ptr+1   ; addr_ptr = address in attribute table
+  STA addr_ptr+1
+
+  LDA PPUSTATUS
+  LDA addr_ptr+1
+  STA PPUADDR
+  LDA addr_ptr
+  STA PPUADDR
+  LDA PPUDATA     ; A := meta-meta-sprite attribute byte
+  LDA PPUDATA     ; https://forums.nesdev.com/viewtopic.php?f=10&t=14147#p169453 (buffered reads?)
+  STA temp_a
+
+  TYA
+  AND #%1
+  STA temp_b    ; temp_b = x mod 2
+  TYA
+  LSR
+  LSR
+  LSR
+  AND #%10
+  ORA temp_b    ; A := (y mod 2, x mod 2)
+  STA temp_b
+
+  LDA temp_a
+  LDY temp_b
+  AND paint_masks,Y
+  STA temp_a
+
+  TXA
+  ASL
+  ASL
+  CLC
+  ADC temp_b
+  TAY
+
+  LDA temp_a
+  ORA paint_palettes,Y
+  TAY
+
+  LDA PPUSTATUS
+  LDA addr_ptr+1
+  STA PPUADDR
+  LDA addr_ptr
+  STA PPUADDR
+  STY PPUDATA
+
+  LDA PPUSTATUS
+  LDA #$20
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
+
+  RTS
+.endproc
+
 CURRENT_PLAYER_SYMBOL = $FE
 DIGIT_TILES = $1B
 .proc write_tiles
@@ -386,6 +470,7 @@ not_start:
   LDA pressed_buttons
   AND #BUTTON_A
   BEQ not_roll
+
   print #$23, #$42, string_clear_16
   LDA #STATE_DICE_ROLLING
   STA game_state
@@ -456,6 +541,7 @@ any_path:
   LDY cell_position,X
   LDX current_player
   JSR move_pip
+  JSR paint_cell
 
   LDA current_die
   BEQ finish_movement
@@ -625,6 +711,9 @@ game_state_handlers:
 ;; each intersection will have only 2 options.
 ;; For example, from cell 05 the player can only go to cell 07 or cell 02.
 ;;
+;; Note: y coordinate is off by one, because pip sprites are drawn almost one row
+;;       above the actual cell
+;;
 ;          1             2             3             4             5             6             7             8             9             A             B             C             D             E
 ;   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; 1 + ^1F <20     + >21 <22     + >23 ^24 <25 + <54 >55     + <52 >53     + <50 >51     + <4E >4F     + <4C >4D     + ^4A >4B     +             +             + ^5D <5E     + >5F <60     + >61 ^62     + 1
@@ -715,6 +804,16 @@ string_b_to_toggle:
 
 string_clear_16:
 .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00
+
+paint_masks:
+.byte %11111100, %11110011, %11001111, %00111111
+
+paint_palettes:
+.byte %00000000, %00000000, %00000000, %00000000
+.byte %00000001, %00000100, %00010000, %01000000
+.byte %00000010, %00001000, %00100000, %10000000
+.byte %00000011, %00001100, %00110000, %11000000
+
 
 board_nametable:
 .incbin "../assets/board.nam"
