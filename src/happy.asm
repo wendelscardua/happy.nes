@@ -49,11 +49,29 @@ symbol_positions: .res 8 ; array of symbol positions
   JSR write_tiles
 .endmacro
 
+.macro save_regs
+  PHA
+  TXA
+  PHA
+  TYA
+  PHA
+.endmacro
+
+.macro restore_regs
+  PLA
+  TAY
+  PLA
+  TAX
+  PLA
+.endmacro
+
 .proc irq_handler
   RTI
 .endproc
 
 .proc nmi_handler
+  save_regs
+
   JSR game_state_handler
 
   ; Refresh OAM
@@ -61,6 +79,9 @@ symbol_positions: .res 8 ; array of symbol positions
   STA OAMADDR
   LDA #$02
   STA OAMDMA
+
+  restore_regs
+
   RTI
 .endproc
 
@@ -217,25 +238,20 @@ iterate_players:
 .endproc
 
 .proc rand_cell
-  ; generate random cell (2-95) in A
+  ; generate random cell ($02-$95) in A
 reroll:
   JSR rand
-  AND #%1111111
-  CMP #0
+  CMP #$00
   BEQ reroll
-  CMP #1
+  CMP #$01
   BEQ reroll
-  CMP #96
+  CMP #$96
   BCS reroll
   RTS
 .endproc
 
 .proc reset_symbol_positions
-  PHA
-  TXA
-  PHA
-  TYA
-  PHA
+  save_regs
 
   LDX #0
 main_loop:
@@ -262,11 +278,7 @@ ok:
   CPX #8
   BNE main_loop
 
-  PLA
-  TAY
-  PLA
-  TAX
-  PLA
+  restore_regs
   RTS
 .endproc
 
@@ -274,11 +286,10 @@ ok:
   ; X = pip, Y=(y,x) position
   ; Move (pip)th pip sprite to (y,x) position (+dy,+dx) based on pip
   ; - preserves X,Y,A
-  PHA ; save A
-  TYA
-  PHA ; save Y
+
+  save_regs
+
   TXA
-  PHA ; save X
   ASL
   ASL
   ASL
@@ -319,11 +330,9 @@ ok:
   CLC
   ADC PIPS_ADDR+7,X
   STA PIPS_ADDR+7,X
-  PLA
-  TAX ; restore X
-  PLA
-  TAY ; restore Y
-  PLA ; restore A
+
+  restore_regs
+
   RTS
 .endproc
 
@@ -331,11 +340,9 @@ ok:
   ; X = die, Y=(y,x) position
   ; Move (die)th die sprite to (y,x) position
   ; - preserves X,Y,A
-  PHA ; save A
-  TYA
-  PHA ; save Y
+  save_regs
+
   TXA
-  PHA ; save X
   ASL
   ASL
   ASL
@@ -366,11 +373,7 @@ ok:
   STA DICE_ADDR+10,X
   STA DICE_ADDR+14,X
 
-  PLA
-  TAX ; restore X
-  PLA
-  TAY ; restore Y
-  PLA ; restore A
+  restore_regs
   RTS
 .endproc
 
@@ -388,13 +391,9 @@ ok:
 
 .proc draw_symbol
   ; draw board symbol index X, on Y=(y,x) cell
-  ; - preserves X,Y
-  ; - clobbers A
-  TXA
-  PHA
+  ; - preserves X,Y,A
+  save_regs
   TYA
-  PHA
-
   CLC
   ADC #$10
   TAY      ; (y,x) = board coordinates, screen y is off by one
@@ -415,6 +414,7 @@ ok:
 
   ; offset
   TYA
+  CLC
   ROL
   ROL
   ROL
@@ -435,8 +435,8 @@ ok:
   STA addr_ptr+1 ; addr_ptr += (y*2) * $20 // last 2 bits of y
 
   TYA
-  ASL
   AND #%00001111
+  ASL
   CLC
   ADC addr_ptr
   STA addr_ptr
@@ -491,10 +491,7 @@ ok:
   LDA #$00
   STA PPUADDR
 
-  PLA
-  TAY
-  PLA
-  TAX
+  restore_regs
   RTS
 .endproc
 
