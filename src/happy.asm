@@ -83,6 +83,16 @@ temp_c: .res 1
 
   JSR game_state_handler
 
+  ; Fix Scroll
+  LDA PPUSTATUS
+  LDA #$20
+  STA PPUADDR
+  LDA #$00
+  STA PPUSCROLL
+  LDA #$00 ; horizontal scroll
+  STA PPUSCROLL
+  STA PPUADDR
+
   ; Refresh OAM
   LDA #$00
   STA OAMADDR
@@ -446,11 +456,6 @@ next:
   CPY #8
   BNE loop
 
-  LDX PPUSTATUS
-  LDX #$20
-  STX PPUADDR
-  LDX #$00
-  STX PPUADDR
   restore_regs
   RTS
 .endproc
@@ -551,12 +556,6 @@ next:
   ADC #$43
   STA PPUDATA
 
-  LDA PPUSTATUS
-  LDA #$20
-  STA PPUADDR
-  LDA #$00
-  STA PPUADDR
-
   restore_regs
   RTS
 .endproc
@@ -635,12 +634,6 @@ next:
   STA PPUADDR
   STY PPUDATA
 
-  LDA PPUSTATUS
-  LDA #$20
-  STA PPUADDR
-  LDA #$00
-  STA PPUADDR
-
   RTS
 .endproc
 
@@ -661,7 +654,7 @@ DIGIT_TILES = $1B
   LDY #0
 writing_loop:
   LDA (addr_ptr), Y
-  BEQ reset_origin
+  BEQ exit
   CMP #NUM_PLAYERS_SYMBOL
   BNE check_current_player_symbol
   CLC
@@ -678,12 +671,7 @@ write_tile:
   STA PPUDATA
   INY
   JMP writing_loop
-reset_origin:
-  LDA PPUSTATUS
-  LDA #$20
-  STA PPUADDR
-  LDA #$00
-  STA PPUADDR
+exit:
   RTS
 .endproc
 
@@ -743,12 +731,6 @@ refresh:
   CLC
   LDA #$1B
   ADC num_players
-  STA PPUDATA
-  LDA PPUSTATUS
-  LDA #$20
-  STA PPUADDR
-  LDA #$00
-  STA PPUADDR
 exit:
   RTS
 .endproc
