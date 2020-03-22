@@ -263,7 +263,7 @@ main_loop:
   TXA ; A = Y = X
   TAY
 check_conflict:
-  JMP ok
+  BEQ ok
   DEY
   LDA temp_a
   CMP symbol_positions,Y
