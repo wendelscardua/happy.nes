@@ -389,6 +389,37 @@ ok:
   RTS
 .endproc
 
+.proc display_inventory
+  ; draw inventory for current player
+  ; - preserves X,Y,A
+  save_regs
+  LDX current_player
+  LDA player_inventory,X
+  LDY #0
+loop:
+  ROL
+  BCC next
+  LDX PPUSTATUS
+  LDX #$23
+  STX PPUADDR
+  LDX inventory_positions,Y
+  STX PPUADDR
+  LDX inventory_tiles,Y
+  STX PPUDATA
+next:
+  INY
+  CPY #8
+  BNE loop
+
+  LDX PPUSTATUS
+  LDX #$20
+  STX PPUADDR
+  LDX #$00
+  STX PPUADDR
+  restore_regs
+  RTS
+.endproc
+
 .proc draw_symbol
   ; draw board symbol index X, on Y=(y,x) cell
   ; - preserves X,Y,A
@@ -662,6 +693,7 @@ finish_setup:
   print #$23, #$22, string_clear_16
   print #$23, #$22, string_player_n
   print #$23, #$42, string_press_a_to_roll
+  JSR display_inventory
   LDA #STATE_PLAYER_WILL_ROLL
   STA game_state
 skip:
@@ -768,6 +800,7 @@ finish_movement:
 
   print #$23, #$22, string_player_n
   print #$23, #$42, string_press_a_to_roll
+  JSR display_inventory
 
   LDA #STATE_PLAYER_WILL_ROLL
   STA game_state
@@ -1017,6 +1050,11 @@ paint_palettes:
 .byte %00000010, %00001000, %00100000, %10000000
 .byte %00000011, %00001100, %00110000, %11000000
 
+; low byte of PPU address (high byte is always $23)
+inventory_positions:
+.byte $18, $19, $38, $39, $1A, $1B, $3A, $3B
+inventory_tiles:
+.byte $5C, $5D, $6C, $6D, $5C, $5D, $6C, $6D
 
 board_nametable:
 .incbin "../assets/board.nam"
