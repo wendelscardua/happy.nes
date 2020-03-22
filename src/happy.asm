@@ -236,7 +236,6 @@ iterate_players:
   INX
   CPX #4
   BNE iterate_players
-
   RTS
 .endproc
 
@@ -809,6 +808,9 @@ any_path:
   LDX current_player
   JSR move_pip
   JSR get_symbol
+
+  CPY #$A7 ; origin position
+  BNE continue_turn
 
   LDX current_player
   LDA player_inventory,X
