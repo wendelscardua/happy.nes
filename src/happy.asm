@@ -240,6 +240,7 @@ iterate_players:
   STA player_cells,X
   TAY
   LDA cell_position,Y
+  STA player_positions,X
   TAY
   JSR move_pip
   INX
@@ -878,7 +879,21 @@ any_path:
   STA game_state
   RTS
 continue_turn:
-
+  ; if over another player, don't consume a die
+  ; expected: Y = current player position
+  LDX #0
+  TYA
+check_other_player_loop:
+  CMP player_positions,X
+  BEQ skip_player
+  INX
+  CPX num_players
+  BNE check_other_player_loop
+  JMP consume_die
+skip_player:
+  RTS
+consume_die:
+  ; consume die
   LDA current_die
   BEQ finish_movement
   TAX
@@ -894,6 +909,12 @@ finish_movement:
   JSR hide_die
 
   LDX current_player
+  ; store new position
+  LDY player_cells,X
+  LDA cell_position,Y
+  STA player_positions,X
+
+  ; change current player to next player
   INX
   CPX num_players
   BNE not_wrap_around_turn
