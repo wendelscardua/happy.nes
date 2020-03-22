@@ -1174,16 +1174,16 @@ cell_alt_target:
 .byte $00, $00, $00, $00, $00, $00, $95, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; 9
 
 string_press_a_to_roll:
-.byte $10, $12, $05, $13, $13, $FF, $01, $FF, $14, $0F, $FF, $12, $0F, $0C, $0C, $00
+.byte $10, $12, $05, $13, $13, $FF, $3D, $FF, $14, $0F, $FF, $12, $0F, $0C, $0C, $00
 
 string_player_n:
 .byte $10, $0C, $01, $19, $05, $12, $FF, $FE, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00
 
 string_a_to_choose:
-.byte $01, $FF, $14, $0F, $FF, $03, $08, $0F, $0F, $13, $05, $FF, $FF, $FF, $FF, $00
+.byte $3D, $FF, $14, $0F, $FF, $03, $08, $0F, $0F, $13, $05, $FF, $FF, $FF, $FF, $00
 
 string_b_to_toggle:
-.byte $02, $FF, $14, $0F, $FF, $14, $0F, $07, $07, $0C, $05, $FF, $FF, $FF, $FF, $00
+.byte $4D, $FF, $14, $0F, $FF, $14, $0F, $07, $07, $0C, $05, $FF, $FF, $FF, $FF, $00
 
 string_you_win:
 .byte $19, $0F, $15, $FF, $17, $09, $0E, $2F, $2F, $2F, $FF, $FF, $FF, $FF, $FF, $00
@@ -1192,7 +1192,7 @@ string_clear_16:
 .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00
 
 string_press_a_to_pass:
-.byte $10, $12, $05, $13, $13, $FF, $01, $FF, $14, $0F, $FF, $10, $01, $13, $13, $00
+.byte $10, $12, $05, $13, $13, $FF, $3D, $FF, $14, $0F, $FF, $10, $01, $13, $13, $00
 
 paint_masks:
 .byte %11111100, %11110011, %11001111, %00111111
