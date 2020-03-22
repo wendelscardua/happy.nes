@@ -3,7 +3,7 @@
 
 DICE_ADDR = $0200
 PIPS_ADDR = $0260
-CURSOR_ADDR = $0280
+CURSOR_ADDR = $02A0
 
 STATE_BEFORE_START = 0 ; e.g. "press start to play"
 STATE_PLAYER_WILL_ROLL = 1 ; e.g. "press A to roll die"
@@ -36,6 +36,7 @@ temp_a: .res 1
 temp_b: .res 1
 player_inventory: .res 8 ; array of player inventory
 symbol_positions: .res 8 ; array of symbol positions
+num_players: .res 1      ; number of players (4-8)
 
 .segment "CODE"
 
@@ -148,10 +149,11 @@ load_sprites:
   LDA sprites,X
   STA $0200,X
   INX
-  CPX #$84        ; size of sprites list
+  CPX #$A4        ; size of sprites list
   BNE load_sprites
 
-  JSR reset_players
+  LDA #4
+  STA num_players
 
   LDA #STATE_BEFORE_START
   STA game_state
@@ -170,8 +172,6 @@ vblankwait:       ; wait for another vblank before continuing
   LDA #%00011110  ; turn on screen
   STA PPUMASK
 
-  print #$23, #$22, string_press_start
-
 forever:
   LDA #STATE_SYMBOLS_SETUP
   CMP game_state
@@ -179,6 +179,7 @@ forever:
   LDA symbol_positions+7 ; checking if all symbol positions are set
   BNE forever
   JSR reset_symbol_positions ; reset symbol positions takes too long and requires a good rng seed
+  JSR reset_players ; since we're here, lets reset players as well
   JMP forever
 .endproc
 
@@ -234,7 +235,7 @@ iterate_players:
   STA player_position,X
   JSR move_pip
   INX
-  CPX #4
+  CPX num_players
   BNE iterate_players
   RTS
 .endproc
@@ -640,7 +641,10 @@ next:
   RTS
 .endproc
 
+; these act like printf, displaying the corresponding digit instead
 CURRENT_PLAYER_SYMBOL = $FE
+NUM_PLAYERS_SYMBOL = $FD
+
 DIGIT_TILES = $1B
 .proc write_tiles
   ; write tiles on background
@@ -655,6 +659,13 @@ DIGIT_TILES = $1B
 writing_loop:
   LDA (addr_ptr), Y
   BEQ reset_origin
+  CMP #NUM_PLAYERS_SYMBOL
+  BNE check_current_player_symbol
+  CLC
+  LDA #DIGIT_TILES
+  ADC num_players
+  JMP write_tile
+check_current_player_symbol:
   CMP #CURRENT_PLAYER_SYMBOL
   BNE write_tile
   CLC
@@ -686,18 +697,56 @@ reset_origin:
 .endproc
 
 .proc game_state_before_start
+  JSR rand ; shuffle rng seed
   JSR readjoy
   LDA pressed_buttons
   AND #BUTTON_START
   BEQ not_start
-
-  print #$23, #$22, string_clear_16
+  
   LDA #STATE_SYMBOLS_SETUP
   STA game_state
   LDA #0
   STA delay ; HACK: using delay as temp var
+  JMP exit
+
 not_start:
-  JSR rand ; shuffle rng seed
+  LDA pressed_buttons
+  AND #BUTTON_LEFT
+  BEQ not_left
+  DEC num_players
+  LDA #1
+  CMP num_players
+  BNE refresh
+  LDA #8
+  STA num_players
+  JMP refresh
+
+not_left:
+  LDA pressed_buttons
+  AND #BUTTON_RIGHT
+  BEQ exit
+  INC num_players
+  LDA #9
+  CMP num_players
+  BNE refresh
+  LDA #4
+  STA num_players
+refresh:
+  LDA PPUSTATUS
+  LDA #$23
+  STA PPUADDR
+  LDA #$44
+  STA PPUADDR
+  CLC
+  LDA #$1B
+  ADC num_players
+  STA PPUDATA
+  LDA PPUSTATUS
+  LDA #$20
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
+exit:
   RTS
 .endproc
 
@@ -836,11 +885,13 @@ finish_movement:
   LDX current_die
   JSR hide_die
 
-  CLC
-  LDA #1
-  ADC current_player
-  AND #%11
-  STA current_player
+  LDX current_player
+  INX
+  CPX num_players
+  BNE not_wrap_around_turn
+  LDX #0
+not_wrap_around_turn:
+  STX current_player
 
   JSR display_inventory
   print #$23, #$22, string_player_n
@@ -966,6 +1017,18 @@ sprites:
 ; PIP-4
 .byte $F0, $0c, 3, $F0
 .byte $F8, $1c, 3, $F0
+; PIP-5
+.byte $F0, $0c, 0, $F0
+.byte $F8, $1c, 0, $F0
+; PIP-6
+.byte $F0, $0c, 1, $F0
+.byte $F8, $1c, 1, $F0
+; PIP-7
+.byte $F0, $0c, 2, $F0
+.byte $F8, $1c, 2, $F0
+; PIP-8
+.byte $F0, $0c, 3, $F0
+.byte $F8, $1c, 3, $F0
 ; CURSOR
 .byte $F0, $0d, 0, $F0
 
@@ -1066,26 +1129,23 @@ cell_alt_target:
 .byte $00, $84, $80, $84, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; 8
 .byte $00, $00, $00, $00, $00, $00  ; 9
 
-string_press_start:
-.byte $10, $12, $05, $13, $13, $FF, $13, $14, $01, $12, $14, $FF, $FF, $FF, $FF, $FF, $00
-
 string_press_a_to_roll:
-.byte $10, $12, $05, $13, $13, $FF, $01, $FF, $14, $0F, $FF, $12, $0F, $0C, $0C, $FF, $00
+.byte $10, $12, $05, $13, $13, $FF, $01, $FF, $14, $0F, $FF, $12, $0F, $0C, $0C, $00
 
 string_player_n:
-.byte $10, $0C, $01, $19, $05, $12, $FF, $FE, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00
+.byte $10, $0C, $01, $19, $05, $12, $FF, $FE, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00
 
 string_a_to_choose:
-.byte $01, $FF, $14, $0F, $FF, $03, $08, $0F, $0F, $13, $05, $FF, $FF, $FF, $FF, $FF, $00
+.byte $01, $FF, $14, $0F, $FF, $03, $08, $0F, $0F, $13, $05, $FF, $FF, $FF, $FF, $00
 
 string_b_to_toggle:
-.byte $02, $FF, $14, $0F, $FF, $14, $0F, $07, $07, $0C, $05, $FF, $FF, $FF, $FF, $FF, $00
+.byte $02, $FF, $14, $0F, $FF, $14, $0F, $07, $07, $0C, $05, $FF, $FF, $FF, $FF, $00
 
 string_you_win:
-.byte $19, $0F, $15, $FF, $17, $09, $0E, $2F, $2F, $2F, $FF, $FF, $FF, $FF, $FF, $FF, $00
+.byte $19, $0F, $15, $FF, $17, $09, $0E, $2F, $2F, $2F, $FF, $FF, $FF, $FF, $FF, $00
 
 string_clear_16:
-.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00
+.byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00
 
 paint_masks:
 .byte %11111100, %11110011, %11001111, %00111111
