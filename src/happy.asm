@@ -25,7 +25,7 @@ QUEUE_CELL = $97
 .import pressed_buttons
 
 addr_ptr: .res 2 ; generic address pointer
-player_position: .res 8 ; array of players current cells
+player_cells: .res 8 ; array of players current cells
 current_player: .res 1
 game_state: .res 1
 rng_seed: .res 2
@@ -39,6 +39,7 @@ temp_b: .res 1
 player_inventory: .res 8 ; array of player inventory
 symbol_positions: .res 8 ; array of symbol positions
 num_players: .res 1      ; number of players (4-8)
+player_positions: .res 8 ; array of player positions, to be skipped
 
 .segment "CODE"
 
@@ -236,7 +237,7 @@ iterate_players:
   TXA
   CLC
   ADC #QUEUE_CELL
-  STA player_position,X
+  STA player_cells,X
   TAY
   LDA cell_position,Y
   TAY
@@ -832,7 +833,7 @@ move:
   STA delay
 
   LDX current_player
-  LDY player_position,X
+  LDY player_cells,X
   LDX cell_alt_target,Y
   BEQ single_path ; no need to choose
 
@@ -859,7 +860,7 @@ any_path:
   LDA #0
   STA choice
   LDY current_player
-  STX player_position,Y
+  STX player_cells,Y
   LDY cell_position,X
   LDX current_player
   JSR move_pip
@@ -950,7 +951,7 @@ move:
   DEC choice_flick
 
   LDY current_player
-  LDX player_position,Y
+  LDX player_cells,Y
   LDY cell_position,X
   LDX current_player
   JSR move_pip
