@@ -13,6 +13,9 @@ STATE_ENDED = 4 ; game ended; "play again?"
 STATE_WHERE_TO = 5 ; asking the new direction between two options
 STATE_SYMBOLS_SETUP = 6 ; vblank where we draw symbols before first roll
 
+DELAY = 30
+SUB_DELAY = 10
+
 .zeropage
 .import buttons
 .import last_frame_buttons
@@ -754,7 +757,7 @@ not_roll:
 
   LDA #STATE_MOVEMENT
   STA game_state
-  LDA #30
+  LDA #DELAY
   STA delay
   LDA #0
   STA choice
@@ -770,7 +773,7 @@ not_roll:
   DEC delay
   RTS
 move:
-  LDA #30
+  LDA #DELAY
   STA delay
 
   LDX current_player
@@ -854,7 +857,7 @@ finish_movement:
 
   LDA #STATE_MOVEMENT
   STA game_state
-  LDA #30
+  LDA #DELAY
   STA delay
   RTS
 not_choose:
@@ -872,7 +875,7 @@ not_toggle:
   DEC delay
   RTS
 move:
-  LDA #10
+  LDA #SUB_DELAY
   STA delay
   LDA choice_flick
   BEQ flick
