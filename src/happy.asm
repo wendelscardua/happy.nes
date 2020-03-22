@@ -716,7 +716,7 @@ not_start:
   AND #BUTTON_LEFT
   BEQ not_left
   DEC num_players
-  LDA #1
+  LDA #3
   CMP num_players
   BNE refresh
   LDA #8
