@@ -895,9 +895,10 @@ finish_movement:
   JSR hide_die
 
   ; if over another player, don't finish yet, skip them instead
-  ; expected: Y = current player position
+  LDX current_player
+  LDY player_cells,X
+  LDA cell_position,Y
   LDX #0
-  TYA
 check_other_player_loop:
   CMP player_positions,X
   BEQ skip_player
