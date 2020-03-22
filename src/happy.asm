@@ -12,6 +12,7 @@ STATE_MOVEMENT = 3 ; while there are available steps, move; choose direction if 
 STATE_ENDED = 4 ; game ended; "play again?"
 STATE_WHERE_TO = 5 ; asking the new direction between two options
 STATE_SYMBOLS_SETUP = 6 ; vblank where we draw symbols before first roll
+STATE_END_TURN = 7 ; prompt for player to pass the turn
 
 DELAY = 30
 SUB_DELAY = 10
@@ -910,6 +911,21 @@ really_finish:
   ORA current_player
   TAX
   JSR move_pip
+
+  print #$23, #$42, string_press_a_to_pass
+
+  LDA #STATE_END_TURN
+  STA game_state
+  RTS
+.endproc
+
+.proc game_state_end_turn
+  ; press A to end turn
+  JSR readjoy
+  LDA pressed_buttons
+  AND #BUTTON_A
+  BEQ not_passed
+
   LDX current_player
   ; change current player to next player
   INX
@@ -921,10 +937,11 @@ not_wrap_around_turn:
 
   JSR display_inventory
   print #$23, #$22, string_player_n
-
   print #$23, #$42, string_press_a_to_roll
   LDA #STATE_PLAYER_WILL_ROLL
   STA game_state
+
+not_passed:
   RTS
 .endproc
 
@@ -1067,6 +1084,7 @@ game_state_handlers:
   .word game_state_ended-1
   .word game_state_where_to-1
   .word game_state_symbols_setup-1
+  .word game_state_end_turn-1
 
 
 ;; Board description
@@ -1172,6 +1190,9 @@ string_you_win:
 
 string_clear_16:
 .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00
+
+string_press_a_to_pass:
+.byte $10, $12, $05, $13, $13, $FF, $01, $FF, $14, $0F, $FF, $10, $01, $13, $13, $00
 
 paint_masks:
 .byte %11111100, %11110011, %11001111, %00111111
