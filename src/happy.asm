@@ -832,7 +832,6 @@ continue_turn:
   JSR move_die
   RTS
 
-  ;  TODO: after moving, begin next player turn
 finish_movement:
   LDX current_die
   JSR hide_die
@@ -858,7 +857,6 @@ finish_movement:
 .endproc
 
 .proc game_state_where_to
-  ; TODO: two paths, choose one
   JSR readjoy
   LDA pressed_buttons
   AND #BUTTON_A
