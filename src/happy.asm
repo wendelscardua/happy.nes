@@ -397,16 +397,17 @@ ok:
   LDA player_inventory,X
   LDY #0
 loop:
-  ROL
-  BCC next
   LDX PPUSTATUS
   LDX #$23
   STX PPUADDR
   LDX inventory_positions,Y
   STX PPUADDR
+  ROL
+  LDX #$FF
+  BCC next
   LDX inventory_tiles,Y
-  STX PPUDATA
 next:
+  STX PPUDATA
   INY
   CPY #8
   BNE loop
