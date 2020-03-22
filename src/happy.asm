@@ -411,6 +411,7 @@ found:
   LDA temp_b
   ORA player_inventory,X
   STA player_inventory,X
+  JSR display_inventory
 end:
   restore_regs
   RTS
