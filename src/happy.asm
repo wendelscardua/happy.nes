@@ -389,6 +389,33 @@ ok:
   RTS
 .endproc
 
+.proc get_symbol
+  ; Y=(y,x) player position
+  ; Add symbol to inventory if player on it
+  ; - preserves X,Y,A
+  save_regs
+  LDX #0
+  LDA #%10000000
+  STA temp_b
+loop:
+  TYA
+  CMP symbol_positions,X
+  BEQ found
+  INX
+  CLC
+  ROR temp_b
+  BCC loop
+  JMP end
+found:
+  LDX current_player
+  LDA temp_b
+  ORA player_inventory,X
+  STA player_inventory,X
+end:
+  restore_regs
+  RTS
+.endproc
+
 .proc display_inventory
   ; draw inventory for current player
   ; - preserves X,Y,A
@@ -777,6 +804,7 @@ any_path:
   LDY cell_position,X
   LDX current_player
   JSR move_pip
+  JSR get_symbol
 
   LDA current_die
   BEQ finish_movement
