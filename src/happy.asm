@@ -296,10 +296,22 @@ ok:
 
 .proc move_pip
   ; X = pip, Y=(y,x) position
+  ; X = pip | #$80 if non-moving position
   ; Move (pip)th pip sprite to (y,x) position
   ; - preserves X,Y,A
 
   save_regs
+
+  TXA
+  AND #$80
+  BNE final_position
+  LDA #$06
+  STA temp_a
+  JMP continue
+final_position:
+  LDA #$0A
+  STA temp_a
+continue:
 
   TXA
   ASL
@@ -308,14 +320,18 @@ ok:
   TAX ; X = 8*pip
   TYA
   AND #%11110000 ; A := (y,0)
+  CLC
+  ADC temp_a
   STA PIPS_ADDR,X
-  ORA #%00001000  ; A := (y,8)
+  ADC #$08
   STA PIPS_ADDR+4,X
   TYA
   ASL
   ASL
   ASL
   ASL ; A := (x,0)
+  CLC
+  ADC #$03
   STA PIPS_ADDR+3,X
   STA PIPS_ADDR+7,X
 
@@ -889,7 +905,12 @@ really_finish:
   LDX current_player
   ; store new position
   STA player_positions,X
-
+  TAY
+  LDA #$80
+  ORA current_player
+  TAX
+  JSR move_pip
+  LDX current_player
   ; change current player to next player
   INX
   CPX num_players
