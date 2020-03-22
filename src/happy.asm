@@ -879,20 +879,6 @@ any_path:
   STA game_state
   RTS
 continue_turn:
-  ; if over another player, don't consume a die
-  ; expected: Y = current player position
-  LDX #0
-  TYA
-check_other_player_loop:
-  CMP player_positions,X
-  BEQ skip_player
-  INX
-  CPX num_players
-  BNE check_other_player_loop
-  JMP consume_die
-skip_player:
-  RTS
-consume_die:
   ; consume die
   LDA current_die
   BEQ finish_movement
@@ -908,6 +894,21 @@ finish_movement:
   LDX current_die
   JSR hide_die
 
+  ; if over another player, don't finish yet, skip them instead
+  ; expected: Y = current player position
+  LDX #0
+  TYA
+check_other_player_loop:
+  CMP player_positions,X
+  BEQ skip_player
+  INX
+  CPX num_players
+  BNE check_other_player_loop
+  JMP really_finish
+skip_player:
+  RTS
+
+really_finish:
   LDX current_player
   ; store new position
   LDY player_cells,X
