@@ -912,8 +912,6 @@ skip_player:
 really_finish:
   LDX current_player
   ; store new position
-  LDY player_cells,X
-  LDA cell_position,Y
   STA player_positions,X
 
   ; change current player to next player
