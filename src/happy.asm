@@ -1018,19 +1018,19 @@ sprites:
 .byte $F0, $0c, 3, $F0
 .byte $F8, $1c, 3, $F0
 ; PIP-5
-.byte $F0, $0c, 0, $F0
-.byte $F8, $1c, 0, $F0
-; PIP-6
-.byte $F0, $0c, 1, $F0
-.byte $F8, $1c, 1, $F0
-; PIP-7
-.byte $F0, $0c, 2, $F0
-.byte $F8, $1c, 2, $F0
-; PIP-8
-.byte $F0, $0c, 3, $F0
-.byte $F8, $1c, 3, $F0
-; CURSOR
 .byte $F0, $0d, 0, $F0
+.byte $F8, $1d, 0, $F0
+; PIP-6
+.byte $F0, $0d, 1, $F0
+.byte $F8, $1d, 1, $F0
+; PIP-7
+.byte $F0, $0d, 2, $F0
+.byte $F8, $1d, 2, $F0
+; PIP-8
+.byte $F0, $0d, 3, $F0
+.byte $F8, $1d, 3, $F0
+; CURSOR
+.byte $F0, $0e, 0, $F0
 
 ;; RTS Trick for game state handlers
 game_state_handlers:
