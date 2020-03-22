@@ -786,7 +786,7 @@ move:
   STX choice
   LDA #0
   STA choice_flick
-
+  STA delay
   LDA #STATE_WHERE_TO
   STA game_state
 
