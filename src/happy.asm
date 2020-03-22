@@ -914,15 +914,15 @@ flick:
 .segment "RODATA"
 palettes:
 ; background
-.byte $0F, $00, $10, $30
-.byte $0F, $06, $16, $26
-.byte $0F, $01, $21, $31
-.byte $0F, $09, $19, $29
+.byte $0C, $00, $10, $30
+.byte $0C, $06, $16, $26
+.byte $0C, $01, $21, $31
+.byte $0C, $09, $19, $29
 ; sprites
-.byte $0F, $14, $24, $34
-.byte $0F, $06, $16, $26
-.byte $0F, $01, $21, $31
-.byte $0F, $09, $19, $29
+.byte $0C, $14, $24, $34
+.byte $0C, $06, $16, $26
+.byte $0C, $01, $21, $31
+.byte $0C, $09, $19, $29
 
 sprites:
 ;    Y    TILE FLAG       X
