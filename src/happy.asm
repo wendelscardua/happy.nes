@@ -41,6 +41,7 @@ player_inventory: .res 8 ; array of player inventory
 symbol_positions: .res 8 ; array of symbol positions
 num_players: .res 1      ; number of players (4-8)
 player_positions: .res 8 ; array of player positions, to be skipped
+temp_c: .res 1
 
 .segment "CODE"
 
@@ -708,7 +709,7 @@ reset_origin:
   LDA #STATE_SYMBOLS_SETUP
   STA game_state
   LDA #0
-  STA delay ; HACK: using delay as temp var
+  STA temp_c
   JMP exit
 
 not_start:
@@ -756,20 +757,20 @@ exit:
   LDA symbol_positions+7 ; checking if all symbol positions are set
   BEQ skip               ; wait until fully setup in main loop
 
-  LDX delay
+  LDX temp_c
   LDY symbol_positions,X
   JSR draw_symbol
-  LDA delay
+  LDA temp_c
   LSR
   LSR
   ORA #%10
   TAX
   JSR paint_cell
-  LDX delay
+  LDX temp_c
   INX
   CPX #8
   BEQ finish_setup
-  STX delay
+  STX temp_c
   RTS
 finish_setup:
   print #$23, #$22, string_clear_16
