@@ -810,6 +810,16 @@ any_path:
   JSR move_pip
   JSR get_symbol
 
+  LDX current_player
+  LDA player_inventory,X
+  CMP #$FF
+  BNE continue_turn
+  print #$23, #$42, string_you_win
+  LDA #STATE_ENDED
+  STA game_state
+  RTS
+continue_turn:
+
   LDA current_die
   BEQ finish_movement
   TAX
@@ -834,15 +844,6 @@ finish_movement:
   JSR display_inventory
   print #$23, #$22, string_player_n
 
-  LDX current_player
-  LDA player_inventory,X
-  CMP #$FF
-  BNE next_turn
-  print #$23, #$42, string_you_win
-  LDA #STATE_ENDED
-  STA game_state
-  RTS
-next_turn:
   print #$23, #$42, string_press_a_to_roll
   LDA #STATE_PLAYER_WILL_ROLL
   STA game_state
