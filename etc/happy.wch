@@ -1,0 +1,27 @@
+
+25
+00000	0010	w	h	0	addr_ptr
+00001	0012	d	h	0	player_cells_1-4
+00002	0016	d	h	0	player_cells_5-8
+00003	001A	b	h	0	current_player
+00004	001B	b	h	0	game_state
+00005	001C	w	h	0	rng_seed
+00006	001E	b	h	0	current_die
+00007	001F	b	h	0	delay
+00008	0020	b	h	0	choice
+00009	0021	b	h	0	alt_choice
+00010	0022	b	h	0	choice_flick
+00011	0023	b	h	0	temp_a
+00012	0024	b	h	0	temp_b
+00013	0025	d	h	0	player_inventory_1-4
+00014	0029	d	h	0	player_inventory_5-8
+00015	002D	d	h	0	symbol_positions_1-4
+00016	0031	d	h	0	symbol_positions_5-8
+00017	0035	b	h	0	num_players
+00018	0036	d	h	0	player_positions_1-4
+00019	003A	d	h	0	player_positions_5-8
+00020	003E	b	h	0	temp_c
+00021	003F	b	h	0	buttons
+00022	0040	b	h	0	last_frame_buttons
+00023	0041	b	h	0	released_buttons
+00024	0042	b	h	0	pressed_buttons
