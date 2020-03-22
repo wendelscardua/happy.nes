@@ -296,7 +296,7 @@ ok:
 
 .proc move_pip
   ; X = pip, Y=(y,x) position
-  ; Move (pip)th pip sprite to (y,x) position (+dy,+dx) based on pip
+  ; Move (pip)th pip sprite to (y,x) position
   ; - preserves X,Y,A
 
   save_regs
@@ -317,30 +317,6 @@ ok:
   ASL
   ASL ; A := (x,0)
   STA PIPS_ADDR+3,X
-  STA PIPS_ADDR+7,X
-
-  TXA
-  AND #%00001000 ; A := 8*pip & 8 == (pip&1)*8
-  ORA #%00000100 ; A += 4
-  TAY
-  CLC
-  ADC PIPS_ADDR,X
-  STA PIPS_ADDR,X
-  TYA
-  CLC
-  ADC PIPS_ADDR+4,X
-  STA PIPS_ADDR+4,X
-
-  TXA
-  AND #%00010000 ; A := 8 * pip & 16 == (pip & 2) * 8
-  LSR ; A := (pip & 2) * 4
-  TAY
-  CLC
-  ADC PIPS_ADDR+3,X
-  STA PIPS_ADDR+3,X
-  TYA
-  CLC
-  ADC PIPS_ADDR+7,X
   STA PIPS_ADDR+7,X
 
   restore_regs
