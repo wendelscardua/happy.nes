@@ -831,10 +831,19 @@ finish_movement:
   AND #%11
   STA current_player
 
-  print #$23, #$22, string_player_n
-  print #$23, #$42, string_press_a_to_roll
   JSR display_inventory
+  print #$23, #$22, string_player_n
 
+  LDX current_player
+  LDA player_inventory,X
+  CMP #$FF
+  BNE next_turn
+  print #$23, #$42, string_you_win
+  LDA #STATE_ENDED
+  STA game_state
+  RTS
+next_turn:
+  print #$23, #$42, string_press_a_to_roll
   LDA #STATE_PLAYER_WILL_ROLL
   STA game_state
   RTS
@@ -1070,6 +1079,9 @@ string_a_to_choose:
 
 string_b_to_toggle:
 .byte $02, $FF, $14, $0F, $FF, $14, $0F, $07, $07, $0C, $05, $FF, $FF, $FF, $FF, $FF, $00
+
+string_you_win:
+.byte $19, $0F, $15, $FF, $17, $09, $0E, $2F, $2F, $2F, $FF, $FF, $FF, $FF, $FF, $FF, $00
 
 string_clear_16:
 .byte $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00
