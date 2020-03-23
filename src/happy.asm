@@ -731,6 +731,7 @@ refresh:
   CLC
   LDA #$1B
   ADC num_players
+  STA PPUDATA
 exit:
   RTS
 .endproc
