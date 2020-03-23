@@ -107,6 +107,21 @@ extra_turns: .res 8      ; extra turns per player
 
 .export main
 .proc main
+  LDX #0
+clear_ram:
+  LDA #$00
+  STA $0000,X
+  STA $0100,X
+  STA $0300,X
+  STA $0400,X
+  STA $0500,X
+  STA $0600,X
+  STA $0700,X
+  LDA #$fe
+  STA $0200,X
+  INX
+  BNE clear_ram
+
   ; write a palette
   LDX PPUSTATUS
   LDX #$3f
