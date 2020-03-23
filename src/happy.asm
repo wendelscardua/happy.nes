@@ -42,6 +42,7 @@ symbol_positions: .res 8 ; array of symbol positions
 num_players: .res 1      ; number of players (4-8)
 player_positions: .res 8 ; array of player positions, to be skipped
 temp_c: .res 1
+extra_turns: .res 8      ; extra turns per player
 
 .segment "CODE"
 
@@ -246,6 +247,8 @@ reroll:
   STA current_player
   LDX #0
 iterate_players:
+  LDA #0
+  STA extra_turns,X
   TXA
   CLC
   ADC #QUEUE_CELL
@@ -884,6 +887,7 @@ check_other_player_loop:
   BNE check_other_player_loop
   JMP really_finish
 skip_player:
+  INC extra_turns,X ; skipped player gets extra turn
   RTS
 
 really_finish:
@@ -896,7 +900,14 @@ really_finish:
   TAX
   JSR move_pip
 
+  LDX current_player
+  LDA extra_turns,X
+  BEQ just_pass
+  print #$23, #$42, string_press_a_to_roll
+  JMP next_state
+just_pass:
   print #$23, #$42, string_press_a_to_pass
+next_state:
 
   LDA #STATE_END_TURN
   STA game_state
@@ -911,6 +922,18 @@ really_finish:
   BEQ not_passed
 
   LDX current_player
+  LDA extra_turns,X
+  BEQ next_player
+
+  ; player has extra turn available
+  DEC extra_turns,X
+
+  print #$23, #$42, string_clear_16
+  LDA #STATE_DICE_ROLLING
+  STA game_state
+  JMP not_passed
+
+next_player:
   ; change current player to next player
   INX
   CPX num_players
