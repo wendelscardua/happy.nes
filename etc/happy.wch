@@ -1,5 +1,5 @@
 
-25
+28
 00000	0010	w	h	0	addr_ptr
 00001	0012	d	h	0	player_cells_1-4
 00002	0016	d	h	0	player_cells_5-8
@@ -21,7 +21,10 @@
 00018	0036	d	h	0	player_positions_1-4
 00019	003A	d	h	0	player_positions_5-8
 00020	003E	b	h	0	temp_c
-00021	003F	b	h	0	buttons
-00022	0040	b	h	0	last_frame_buttons
-00023	0041	b	h	0	released_buttons
-00024	0042	b	h	0	pressed_buttons
+00021	003F	d	h	0	extra_turns_1-4
+00022	0043	d	h	0	extra_turns_5-8
+00023	0047	b	h	0	blue_shell
+00024	0048	b	h	0	buttons
+00025	0049	b	h	0	last_frame_buttons
+00026	004A	b	h	0	released_buttons
+00027	004B	b	h	0	pressed_buttons
