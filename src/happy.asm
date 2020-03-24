@@ -849,6 +849,93 @@ return:
   RTS
 .endproc
 
+.proc close_bridge_if_used
+  ; X = current player cell
+  ; if X is a bridge target, close the bridge (for now)
+  ; - cobbles Y
+  LDY #0
+  TXA
+loop:
+  CMP bridge_targets,Y
+  BEQ found
+  INY
+  CPY #8
+  BNE loop
+  JMP return
+found:
+  LDA bridge_numbers,Y
+  BNE when_bridge_2
+
+  LDA #4       ; TODO tweak, constantize
+  STA bridge_1
+
+  TXA
+  PHA
+  LDX #%01
+  LDY #$62
+  JSR paint_cell
+  LDY #$63
+  JSR paint_cell
+  LDY #$64
+  JSR paint_cell
+  PLA
+  TAX
+
+  JMP return
+when_bridge_2:
+
+  LDA #4       ; TODO tweak, constantize
+  STA bridge_2
+
+  TXA
+  PHA
+  LDX #%01
+  LDY #$7C
+  JSR paint_cell
+  LDY #$7D
+  JSR paint_cell
+  PLA
+  TAX
+
+return:
+  RTS
+.endproc
+
+.proc restore_bridges
+  save_regs
+
+  LDA bridge_1
+  BEQ when_bridge_2
+  DEC bridge_1
+  BNE when_bridge_2
+
+  LDX #%00
+  LDY #$62
+  JSR paint_cell
+  LDY #$63
+  JSR paint_cell
+  LDY #$64
+  JSR paint_cell
+
+  JMP return
+when_bridge_2:
+
+  LDA bridge_2
+  BEQ return
+  DEC bridge_2
+  BNE return
+
+  LDX #%00
+  LDY #$7C
+  JSR paint_cell
+  LDY #$7D
+  JSR paint_cell
+
+return:
+  restore_regs
+  RTS
+.endproc
+
 .proc game_state_movement
   LDX choice    ; if player has choosen a target between two options, skip to it
   BNE any_path
@@ -889,6 +976,7 @@ bridged:
 single_path:
   LDX cell_target,Y
 any_path:
+  JSR close_bridge_if_used
   LDA #0
   STA choice
   LDY current_player
@@ -992,7 +1080,7 @@ next_player:
   LDX #0
 not_wrap_around_turn:
   STX current_player
-
+  JSR restore_bridges
   ; if one player has 8 suits, the other players get one extra turn
   LDA blue_shell
   BEQ not_blue_shell
