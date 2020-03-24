@@ -659,7 +659,6 @@ next:
 
 ; these act like printf, displaying the corresponding digit instead
 CURRENT_PLAYER_SYMBOL = $FE
-NUM_PLAYERS_SYMBOL = $FD
 
 DIGIT_TILES = $1B
 .proc write_tiles
@@ -675,13 +674,6 @@ DIGIT_TILES = $1B
 writing_loop:
   LDA (addr_ptr), Y
   BEQ exit
-  CMP #NUM_PLAYERS_SYMBOL
-  BNE check_current_player_symbol
-  CLC
-  LDA #DIGIT_TILES
-  ADC num_players
-  JMP write_tile
-check_current_player_symbol:
   CMP #CURRENT_PLAYER_SYMBOL
   BNE write_tile
   CLC
