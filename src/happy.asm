@@ -523,7 +523,7 @@ next:
   STA addr_ptr
   LDA #0
   ADC addr_ptr+1
-  STA addr_ptr+1 ; addr_ptr += (y*2) * $20 // last 2 bits of y
+  STA addr_ptr+1 ; addr_ptr += (y*2) * $20 // last 6 bits of y
 
   TYA
   AND #%00001111
@@ -533,7 +533,7 @@ next:
   STA addr_ptr
   LDA #0
   ADC addr_ptr+1
-  STA addr_ptr+1 ; addr_ptr += x * 2 // last 2 bits of y
+  STA addr_ptr+1 ; addr_ptr += x * 2
 
   LDA PPUSTATUS
   LDA addr_ptr+1
