@@ -818,6 +818,37 @@ not_roll:
   RTS
 .endproc
 
+.proc detect_bridge
+  ; detect if there's a bridge available for cell (Y)
+  ; returns bridge destination in X
+  ; - preserves Y
+  LDX #0
+  TYA
+loop:
+  CMP bridge_cells,X
+  BEQ found
+  INX
+  CPX #8
+  BNE loop
+  LDX #0
+  JMP return
+found:
+  LDA bridge_numbers,X
+  BNE when_bridge_2
+  LDA bridge_1
+  BNE return
+  LDA bridge_targets,X
+  TAX
+  JMP return
+when_bridge_2:
+  LDA bridge_2
+  BNE return
+  LDA bridge_targets,X
+  TAX
+return:
+  RTS
+.endproc
+
 .proc game_state_movement
   LDX choice    ; if player has choosen a target between two options, skip to it
   BNE any_path
@@ -832,9 +863,12 @@ move:
 
   LDX current_player
   LDY player_cells,X
+  JSR detect_bridge ; sets X like cell_alt_target if bridge available here
+  TXA
+  BNE bridged
   LDX cell_alt_target,Y
   BEQ single_path ; no need to choose
-
+bridged:
   ; choosing state
   STX alt_choice
   LDX cell_target,Y
@@ -1131,6 +1165,8 @@ game_state_handlers:
 ;; each intersection will have only 2 options.
 ;; For example, from cell 05 the player can only go to cell 07 or cell 02.
 ;;
+;; 9F - bridge 1 - A0 and A1 - bridge 2 - A2 are bridged cells
+;;
 ;; Note: y coordinate is off by one, because pip sprites are drawn almost one row
 ;;       above the actual cell
 ;;
@@ -1146,9 +1182,9 @@ game_state_handlers:
 ;   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; 5 + ^17 v18     +             +             +             +             +             + v35 ^36     +             +             +             + ^8C <8D     + >8E <8F     + v6E >6F <70 + >71 ^72     + 5
 ;   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-; 6 + ^15 v16     +             +             +             + <3B ^3C     + <39 >3A     + v37 >38     +             +             +             + ^8A v8B     +             +             + v73 ^74     + 6
+; 6 + ^15 v16 :A0 +             +             +             + <3B ^3C :9F + <39 >3A     + v37 >38     +             +             +             + ^8A v8B     +             +             + v73 ^74     + 6
 ;   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-; 7 + ^13 v14     +             +             +             + v3D ^3E     +             +             +             +             +             + ^88 v89     +             +             + v75 ^76     + 7
+; 7 + ^13 v14     +             +             +             + v3D ^3E     +             +             +             +             +             + ^88 v89 :A2 +             +             + v75 ^76 :A1 + 7
 ;   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; 8 + ^11 v12     +             +             +             + v3F ^40     +             + #fila 9B    + #fila 9C    + #fila 9D    + #fila 9E    + ^86 v87     +             +             + v77 ^78     + 8
 ;   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1174,8 +1210,8 @@ cell_position:
 .byte $1D, $1E, $1E, $2E, $2E, $3E, $3E, $3D, $3D, $3D, $3C, $3C, $4D, $4D, $5D, $5D ; 6
 .byte $5D, $5E, $5E, $6E, $6E, $7E, $7E, $8E, $8E, $9E, $9E, $AE, $AE, $AD, $AD, $AC ; 7
 .byte $AC, $AB, $AB, $AB, $9B, $9B, $8B, $8B, $7B, $7B, $6B, $6B, $5B, $5B, $5C, $5C ; 8
-.byte $AA, $AA, $A9, $A9, $A8, $A8, $A7, $97, $98, $99, $9A, $87, $88, $89, $8A, $FF ; 9
-
+.byte $AA, $AA, $A9, $A9, $A8, $A8, $A7, $97, $98, $99, $9A, $87, $88, $89, $8A, $65 ; 9
+.byte $61, $7E, $7B, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; A
 ;; Cell target (main)
 ;; Where the player can go from each cell
 ;; (or at least the first option if there are two alternatives)
@@ -1191,7 +1227,8 @@ cell_target:
 .byte $5E, $63, $60, $65, $62, $67, $64, $6C, $6C, $6A, $5C, $68, $6E, $69, $71, $71 ; 6
 .byte $8F, $73, $70, $75, $72, $77, $74, $79, $76, $7B, $78, $7D, $7A, $7F, $7C, $81 ; 7
 .byte $7E, $90, $90, $80, $86, $82, $88, $85, $8A, $87, $8C, $89, $8E, $8B, $6F, $8D ; 8
-.byte $92, $83, $94, $91, $00, $93, $02, $96, $96, $96, $96, $96, $96, $96, $96, $FF ; 9
+.byte $92, $83, $94, $91, $00, $93, $02, $96, $96, $96, $96, $96, $96, $96, $96, $3A ; 9
+.byte $17, $74, $87, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF ; A
 
 ;; Cell alternative target (if needed)
 cell_alt_target:
@@ -1205,7 +1242,15 @@ cell_alt_target:
 .byte $00, $00, $00, $00, $00, $00, $00, $6A, $66, $66, $00, $00, $00, $00, $8F, $6D ; 6
 .byte $6D, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; 7
 .byte $00, $84, $80, $84, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; 8
-.byte $00, $00, $00, $00, $00, $00, $95, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; 9
+.byte $00, $00, $00, $00, $00, $00, $95, $00, $00, $00, $00, $00, $00, $00, $00, $3D ; 9
+.byte $14, $77, $8A, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; A
+;; Bridge data
+bridge_cells:
+.byte $3B, $3C, $15, $16, $75, $76, $88, $89
+bridge_targets:
+.byte $A0, $A0, $9F, $9F, $A2, $A2, $A1, $A1
+bridge_numbers:
+.byte $00, $00, $00, $00, $01, $01, $01, $01
 
 string_press_a_to_roll:
 .byte $10, $12, $05, $13, $13, $FF, $3D, $FF, $14, $0F, $FF, $12, $0F, $0C, $0C, $00
