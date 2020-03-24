@@ -5,19 +5,21 @@ DICE_ADDR = $0200
 PIPS_ADDR = $0260
 CURSOR_ADDR = $02A0
 
-STATE_BEFORE_START = 0 ; e.g. "press start to play"
-STATE_PLAYER_WILL_ROLL = 1 ; e.g. "press A to roll die"
-STATE_DICE_ROLLING = 2 ; animate dice rolling?
-STATE_MOVEMENT = 3 ; while there are available steps, move; choose direction if needed
-STATE_ENDED = 4 ; game ended; "play again?"
-STATE_WHERE_TO = 5 ; asking the new direction between two options
-STATE_SYMBOLS_SETUP = 6 ; vblank where we draw symbols before first roll
-STATE_END_TURN = 7 ; prompt for player to pass the turn
-
 DELAY = 30
 SUB_DELAY = 10
 
 QUEUE_CELL = $97
+
+.enum game_states
+  before_start
+  player_will_roll
+  dice_rolling
+  movement
+  ended
+  where_to
+  symbols_setup
+  end_turn
+.endenum
 
 .zeropage
 .import buttons
@@ -186,7 +188,7 @@ load_sprites:
   LDA #4
   STA num_players
 
-  LDA #STATE_BEFORE_START
+  LDA #game_states::before_start
   STA game_state
 
   LDA #$10
@@ -204,7 +206,7 @@ vblankwait:       ; wait for another vblank before continuing
   STA PPUMASK
 
 forever:
-  LDA #STATE_SYMBOLS_SETUP
+  LDA #game_states::symbols_setup
   CMP game_state
   BNE forever
   LDA symbol_positions+7 ; checking if all symbol positions are set
@@ -712,7 +714,7 @@ exit:
   AND #BUTTON_START
   BEQ not_start
   
-  LDA #STATE_SYMBOLS_SETUP
+  LDA #game_states::symbols_setup
   STA game_state
   LDA #0
   STA temp_c
@@ -778,7 +780,7 @@ finish_setup:
   print #$23, #$22, string_player_n
   print #$23, #$42, string_press_a_to_roll
   JSR display_inventory
-  LDA #STATE_PLAYER_WILL_ROLL
+  LDA #game_states::player_will_roll
   STA game_state
 skip:
   RTS
@@ -791,7 +793,7 @@ skip:
   BEQ not_roll
 
   print #$23, #$42, string_clear_16
-  LDA #STATE_DICE_ROLLING
+  LDA #game_states::dice_rolling
   STA game_state
 not_roll:
   RTS
@@ -807,7 +809,7 @@ not_roll:
   LDY #$87
   JSR move_die
 
-  LDA #STATE_MOVEMENT
+  LDA #game_states::movement
   STA game_state
   LDA #DELAY
   STA delay
@@ -840,7 +842,7 @@ move:
   LDA #0
   STA choice_flick
   STA delay
-  LDA #STATE_WHERE_TO
+  LDA #game_states::where_to
   STA game_state
 
   LDA #10
@@ -870,7 +872,7 @@ any_path:
   CMP #$FF
   BNE continue_turn
   print #$23, #$42, string_you_win
-  LDA #STATE_ENDED
+  LDA #game_states::ended
   STA game_state
   RTS
 continue_turn:
@@ -924,7 +926,7 @@ just_pass:
   print #$23, #$42, string_press_a_to_pass
 next_state:
 
-  LDA #STATE_END_TURN
+  LDA #game_states::end_turn
   STA game_state
   RTS
 .endproc
@@ -944,7 +946,7 @@ next_state:
   DEC extra_turns,X
 
   print #$23, #$42, string_clear_16
-  LDA #STATE_DICE_ROLLING
+  LDA #game_states::dice_rolling
   STA game_state
   JMP not_passed
 
@@ -960,7 +962,7 @@ not_wrap_around_turn:
   JSR display_inventory
   print #$23, #$22, string_player_n
   print #$23, #$42, string_press_a_to_roll
-  LDA #STATE_PLAYER_WILL_ROLL
+  LDA #game_states::player_will_roll
   STA game_state
 
 not_passed:
@@ -981,7 +983,7 @@ not_passed:
   print #$23, #$22, string_player_n
   print #$23, #$42, string_clear_16
 
-  LDA #STATE_MOVEMENT
+  LDA #game_states::movement
   STA game_state
   LDA #DELAY
   STA delay
@@ -1098,6 +1100,7 @@ sprites:
 .byte $F0, $0e, 0, $F0
 
 ;; RTS Trick for game state handlers
+;; must follow the order of game_state enum
 game_state_handlers:
   .word game_state_before_start-1
   .word game_state_player_will_roll-1
