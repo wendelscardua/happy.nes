@@ -830,22 +830,24 @@ loop:
   INX
   CPX #8
   BNE loop
-  LDX #0
-  JMP return
+  JMP fail_return
 found:
   LDA bridge_numbers,X
   BNE when_bridge_2
   LDA bridge_1
-  BNE return
+  BNE fail_return
   LDA bridge_targets,X
   TAX
   JMP return
 when_bridge_2:
   LDA bridge_2
-  BNE return
+  BNE fail_return
   LDA bridge_targets,X
   TAX
 return:
+  RTS
+fail_return:
+  LDX #0
   RTS
 .endproc
 
