@@ -46,6 +46,8 @@ player_positions: .res 8 ; array of player positions, to be skipped
 temp_c: .res 1
 extra_turns: .res 8      ; extra turns per player
 blue_shell: .res 1       ; indicates one player as all 8 symbols
+bridge_1: .res 1         ; 0 if bridge enabled, else = countdown to enable
+bridge_2: .res 1         ; idem
 
 .segment "CODE"
 

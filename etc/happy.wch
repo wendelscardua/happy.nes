@@ -24,7 +24,9 @@
 00021	003F	d	h	0	extra_turns_1-4
 00022	0043	d	h	0	extra_turns_5-8
 00023	0047	b	h	0	blue_shell
-00024	0048	b	h	0	buttons
-00025	0049	b	h	0	last_frame_buttons
-00026	004A	b	h	0	released_buttons
-00027	004B	b	h	0	pressed_buttons
+00024	0048	b	h	0	bridge_1
+00025	0049	b	h	0	bridge_2
+00024	004A	b	h	0	buttons
+00025	004B	b	h	0	last_frame_buttons
+00026	004C	b	h	0	released_buttons
+00027	004D	b	h	0	pressed_buttons
