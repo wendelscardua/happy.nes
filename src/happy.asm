@@ -112,6 +112,17 @@ bridge_2: .res 1         ; idem
 
 .export main
 .proc main
+  SEI         ; ignore IRQs
+  CLD         ; disable decimal mode
+  LDX #$40
+  STX $4017   ; disable APU frame IRQ
+  LDX #$ff
+  TXS         ; Set up stack
+  INX         ; now X = 0
+  STX PPUCTRL ; disable NMI
+  STX PPUMASK ; disable rendering
+  STX $4010   ; disable DMC IRQs
+
   LDX #0
 clear_ram:
   LDA #$00
