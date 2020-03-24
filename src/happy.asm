@@ -45,6 +45,7 @@ num_players: .res 1      ; number of players (4-8)
 player_positions: .res 8 ; array of player positions, to be skipped
 temp_c: .res 1
 extra_turns: .res 8      ; extra turns per player
+blue_shell: .res 1       ; indicates one player as all 8 symbols
 
 .segment "CODE"
 
@@ -447,6 +448,11 @@ found:
   LDA temp_b
   ORA player_inventory,X
   STA player_inventory,X
+  CMP #$FF
+  BNE not_blue_shell
+  LDA #$01
+  STA blue_shell
+not_blue_shell:
   JSR display_inventory
 end:
   restore_regs
@@ -951,6 +957,15 @@ next_player:
 not_wrap_around_turn:
   STX current_player
 
+  ; if one player has 8 suits, the other players get one extra turn
+  LDA blue_shell
+  BEQ not_blue_shell
+  LDA player_inventory,X
+  CMP #$FF
+  BEQ not_blue_shell
+  INC extra_turns,X
+
+not_blue_shell:
   JSR display_inventory
   print #$23, #$22, string_player_n
   print #$23, #$42, string_press_a_to_roll
