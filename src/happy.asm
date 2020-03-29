@@ -1,5 +1,6 @@
 .include "constants.inc"
 .include "header.inc"
+.include "pently.inc"
 
 DICE_ADDR = $0200
 PIPS_ADDR = $0260
@@ -19,6 +20,11 @@ QUEUE_CELL = $97
   where_to
   symbols_setup
   end_turn
+.endenum
+
+.enum pently_songs
+  Happy_lullaby
+  A_winner_is_you
 .endenum
 
 .zeropage
@@ -48,11 +54,19 @@ extra_turns: .res 8      ; extra turns per player
 blue_shell: .res 1       ; indicates one player as all 8 symbols
 bridge_1: .res 1         ; 0 if bridge enabled, else = countdown to enable
 bridge_2: .res 1         ; idem
+tvSystem: .res 1         ; Pently-detected tv system
+pently_zptemp: .res 5    ; Pently scratch space
+nmis: .res 1             ; NMI counter
+old_nmis: .res 1
+
+.exportzp tvSystem, pently_zptemp
 
 .segment "CODE"
 
 .import reset_handler
 .import readjoy
+
+.import getTVSystem
 
 .macro print xpos, ypos, string
   LDA #<string
@@ -86,7 +100,6 @@ bridge_2: .res 1         ; idem
 
 .proc nmi_handler
   save_regs
-
   JSR game_state_handler
 
   ; Fix Scroll
@@ -104,7 +117,7 @@ bridge_2: .res 1         ; idem
   STA OAMADDR
   LDA #$02
   STA OAMDMA
-
+  INC nmis
   restore_regs
 
   RTI
@@ -210,6 +223,9 @@ load_sprites:
   LDA #$25
   STA rng_seed+1
 
+  JSR pently_init
+  JSR getTVSystem
+
 vblankwait:       ; wait for another vblank before continuing
   BIT PPUSTATUS
   BPL vblankwait
@@ -219,7 +235,16 @@ vblankwait:       ; wait for another vblank before continuing
   LDA #%00011110  ; turn on screen
   STA PPUMASK
 
+  LDA #pently_songs::Happy_lullaby
+  JSR pently_start_music
+
 forever:
+  LDA nmis
+  CMP old_nmis
+  BEQ etc
+  STA old_nmis
+  JSR pently_update
+etc:
   LDA #game_states::symbols_setup
   CMP game_state
   BNE forever
@@ -724,7 +749,7 @@ exit:
   LDA pressed_buttons
   AND #BUTTON_START
   BEQ not_start
-  
+
   LDA #game_states::symbols_setup
   STA game_state
   LDA #0
@@ -1007,6 +1032,10 @@ any_path:
   CMP #$FF
   BNE continue_turn
   print #$23, #$42, string_you_win
+
+  LDA #pently_songs::A_winner_is_you
+  JSR pently_start_music
+
   LDA #game_states::ended
   STA game_state
   RTS
