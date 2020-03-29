@@ -11,3 +11,7 @@ Run `make` to compile `happy.nes` (requires [cc65](https://github.com/cc65/cc65/
 ## Pently
 
 HappyNESs uses the audio engine [Pently](https://github.com/pinobatch/pently).
+
+## Debugging
+
+The watch file `etc/happy.wch` can be used in emulators like Nintaco or FCEUX in order to watch the value of zeropage variables.

@@ -1,5 +1,5 @@
 
-28
+35
 00000	0010	w	h	0	addr_ptr
 00001	0012	d	h	0	player_cells_1-4
 00002	0016	d	h	0	player_cells_5-8
@@ -26,7 +26,12 @@
 00023	0047	b	h	0	blue_shell
 00024	0048	b	h	0	bridge_1
 00025	0049	b	h	0	bridge_2
-00024	004A	b	h	0	buttons
-00025	004B	b	h	0	last_frame_buttons
-00026	004C	b	h	0	released_buttons
-00027	004D	b	h	0	pressed_buttons
+00026	004A	b	h	0	tvSystem
+00027	004B	d	h	0	pently_zptemp_1-4
+00028	004F	b	h	0	pently_zptemp_5
+00029	0050	b	h	0	nmis
+00030	0051	b	h	0	old_nmis
+00031	0052	b	h	0	buttons
+00032	0053	b	h	0	last_frame_buttons
+00033	0054	b	h	0	released_buttons
+00034	0055	b	h	0	pressed_buttons
